@@ -1,0 +1,110 @@
+/* Step Indicator */
+.step-indicator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32px;
+  background: #f9fafb;
+}
+
+.step-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.step-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  transition: all 0.3s;
+  border: 3px solid transparent;
+}
+
+.step.active .step-circle {
+  background: #ddd6fe;
+  color: #667eea;
+  border-color: #667eea;
+}
+
+.step.current .step-circle {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.step-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ca3af;
+  transition: color 0.3s;
+  white-space: nowrap;
+}
+
+.step.active .step-label {
+  color: #667eea;
+}
+
+.step.current .step-label {
+  color: #5b21b6;
+}
+
+.step-line {
+  flex: 1;
+  height: 3px;
+  background: #e5e7eb;
+  margin: 0 16px;
+  transition: background 0.3s;
+}
+
+.step-line.active {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .step-indicator {
+    padding: 20px 16px;
+  }
+
+  .step-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .step-label {
+    font-size: 11px;
+  }
+
+  .step-line {
+    margin: 0 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .step-label {
+    display: none;
+  }
+
+  .step-circle {
+    width: 36px;
+    height: 36px;
+  }
+}

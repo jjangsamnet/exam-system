@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { auth, db } from './firebase-config'
+import QuestionForm from './components/QuestionForm'
 import './App.css'
 
 function App() {
   const [firebaseStatus, setFirebaseStatus] = useState('연결 확인 중...')
   const [projectId, setProjectId] = useState('')
+  const [showQuestionForm, setShowQuestionForm] = useState(false)
   const [systemInfo, setSystemInfo] = useState({
     schemaVersion: '1.0',
     totalEntities: 10,
@@ -160,8 +162,19 @@ function App() {
           <p style={styles.footerText}>
             🚀 프로덕션 준비 완료 - UI 개발 진행 중
           </p>
+          <button
+            style={styles.demoButton}
+            onClick={() => setShowQuestionForm(true)}
+          >
+            📝 문항 등록 UI 데모 보기
+          </button>
         </footer>
       </main>
+
+      {/* Question Form Modal */}
+      {showQuestionForm && (
+        <QuestionForm onClose={() => setShowQuestionForm(false)} />
+      )}
     </div>
   )
 }
@@ -320,6 +333,18 @@ const styles = {
   footerText: {
     color: '#666',
     margin: '0.5rem 0'
+  },
+  demoButton: {
+    marginTop: '1.5rem',
+    padding: '15px 30px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    fontSize: '16px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
   }
 }
 
