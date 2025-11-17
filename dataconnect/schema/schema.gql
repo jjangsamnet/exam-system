@@ -1,52 +1,109 @@
-# Example schema for simple movie review app
+# 시험 출제 시스템 데이터베이스 스키마
 
-# User table is keyed by Firebase Auth UID.
+# 사용자 (교사, 학생, 관리자)
 type User @table {
-  # `@default(expr: "auth.uid")` sets it to Firebase Auth UID during insert and upsert.
   id: String! @default(expr: "auth.uid")
-  username: String! @col(dataType: "varchar(50)")
-  # The `user: User!` field in the Review table generates the following one-to-many query field.
-  #  reviews_on_user: [Review!]!
-  # The `Review` join table the following many-to-many query field.
-  #  movies_via_Review: [Movie!]!
+  email: String!
+  name: String! @col(dataType: "varchar(100)")
+  role: String! @col(dataType: "varchar(20)") # 'teacher', 'student', 'admin'
+  createdAt: Timestamp! @default(expr: "request.time")
 }
 
-# Movie is keyed by a randomly generated UUID.
-type Movie @table {
-  # If you do not pass a 'key' to `@table`, Data Connect automatically adds the following 'id' column.
-  # Feel free to uncomment and customize it.
-  #  id: UUID! @default(expr: "uuidV4()")
-  title: String!
-  imageUrl: String!
-  genre: String
-}
-
-# MovieMetadata is a metadata attached to a Movie.
-# Movie <-> MovieMetadata is a one-to-one relationship
-type MovieMetadata @table {
-  # @unique ensures each Movie can only one MovieMetadata.
-  movie: Movie! @unique
-  # The movie field adds the following foreign key field. Feel free to uncomment and customize it.
-  #  movieId: UUID!
-  rating: Float
-  releaseYear: Int
+# 문제 카테고리 (과목, 단원)
+type Category @table {
+  id: UUID! @default(expr: "uuidV4()")
+  name: String! @col(dataType: "varchar(100)")
   description: String
+  parentCategory: Category # 상위 카테고리 (예: 과목 > 단원 > 소단원)
+  createdBy: User!
+  createdAt: Timestamp! @default(expr: "request.time")
 }
 
-# Reviews is a join table between User and Movie.
-# It has a composite primary keys `userUid` and `movieId`.
-# A user can leave reviews for many movies. A movie can have reviews from many users.
-# User  <-> Review is a one-to-many relationship
-# Movie <-> Review is a one-to-many relationship
-# Movie <-> User is a many-to-many relationship
-type Review @table(name: "Reviews", key: ["movie", "user"]) {
-  user: User!
-  # The user field adds the following foreign key field. Feel free to uncomment and customize it.
-  #  userUid: String!
-  movie: Movie!
-  # The movie field adds the following foreign key field. Feel free to uncomment and customize it.
-  #  movieId: UUID!
-  rating: Int
-  reviewText: String
-  reviewDate: Date! @default(expr: "request.time")
+# 문제
+type Question @table {
+  id: UUID! @default(expr: "uuidV4()")
+  category: Category!
+  type: String! @col(dataType: "varchar(20)") # 'multiple_choice', 'true_false', 'short_answer', 'essay'
+  questionText: String! # 문제 내용
+  imageUrl: String # 문제 이미지 (선택)
+  difficulty: String! @col(dataType: "varchar(20)") # 'easy', 'medium', 'hard'
+  points: Int! # 배점
+  createdBy: User!
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+# 객관식 선택지
+type Choice @table {
+  id: UUID! @default(expr: "uuidV4()")
+  question: Question!
+  choiceText: String! # 선택지 내용
+  choiceNumber: Int! # 선택지 번호 (1, 2, 3, 4, 5)
+  isCorrect: Boolean! # 정답 여부
+}
+
+# 주관식 정답
+type Answer @table {
+  id: UUID! @default(expr: "uuidV4()")
+  question: Question!
+  answerText: String! # 정답 내용
+  keywords: String # 채점 키워드 (JSON 형식)
+}
+
+# 시험
+type Exam @table {
+  id: UUID! @default(expr: "uuidV4()")
+  title: String! @col(dataType: "varchar(200)")
+  description: String
+  duration: Int! # 시험 시간 (분)
+  totalPoints: Int! # 총점
+  passingScore: Int! # 합격 점수
+  startTime: Timestamp # 시작 시간
+  endTime: Timestamp # 종료 시간
+  isPublished: Boolean! @default(value: false) # 공개 여부
+  createdBy: User!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# 시험-문제 연결 (다대다)
+type ExamQuestion @table(key: ["exam", "question"]) {
+  exam: Exam!
+  question: Question!
+  questionOrder: Int! # 문제 순서
+  pointsOverride: Int # 이 시험에서의 배점 (문제 기본 배점과 다를 경우)
+}
+
+# 시험 응시 기록
+type ExamAttempt @table {
+  id: UUID! @default(expr: "uuidV4()")
+  exam: Exam!
+  student: User!
+  startedAt: Timestamp! @default(expr: "request.time")
+  submittedAt: Timestamp
+  score: Int # 획득 점수
+  isPassed: Boolean # 합격 여부
+  status: String! @col(dataType: "varchar(20)") @default(value: "in_progress") # 'in_progress', 'submitted', 'graded'
+}
+
+# 학생 답안
+type StudentAnswer @table {
+  id: UUID! @default(expr: "uuidV4()")
+  attempt: ExamAttempt!
+  question: Question!
+  selectedChoice: Choice # 객관식 선택 답안
+  textAnswer: String # 주관식 텍스트 답안
+  isCorrect: Boolean # 정답 여부 (자동 채점 후)
+  earnedPoints: Int # 획득 점수
+  gradedBy: User # 채점자 (주관식의 경우)
+  feedback: String # 채점 피드백
+  answeredAt: Timestamp! @default(expr: "request.time")
+}
+
+# 통계 (선택 사항)
+type QuestionStatistics @table {
+  question: Question! @unique
+  totalAttempts: Int! @default(value: 0)
+  correctAttempts: Int! @default(value: 0)
+  averageScore: Float
+  lastUpdated: Timestamp! @default(expr: "request.time")
 }

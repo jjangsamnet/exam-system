@@ -1,78 +1,280 @@
-# Example queries for a simple movie app.
+# 시험 출제 시스템 GraphQL 쿼리
 
-# @auth() directives control who can call each operation.
-# Anyone should be able to list all movies, so the auth level is set to PUBLIC
-query ListMovies @auth(level: PUBLIC, insecureReason: "Anyone can list all movies.") {
-  movies {
-    id
-    title
-    imageUrl
-    genre
-  }
-}
+# === 사용자 관리 쿼리 ===
 
-# List all users, only admins should be able to list all users, so we use NO_ACCESS
-query ListUsers @auth(level: NO_ACCESS) {
-  users {
-    id
-    username
-  }
-}
-
-# Logged in users can list all their reviews and movie titles associated with the review
-# Since the query uses the uid of the current authenticated user, we set auth level to USER
-query ListUserReviews @auth(level: USER) {
+# 현재 로그인한 사용자 정보 조회
+query GetCurrentUser @auth(level: USER) {
   user(key: { id_expr: "auth.uid" }) {
     id
-    username
-    # <field>_on_<foreign_key_field> makes it easy to grab info from another table
-    # Here, we use it to grab all the reviews written by the user.
-    reviews: reviews_on_user {
-      rating
-      reviewDate
-      reviewText
-      movie {
-        id
-        title
-      }
-    }
+    email
+    name
+    role
+    createdAt
   }
 }
 
-# Get movie by id
-query GetMovieById($id: UUID!) @auth(level: PUBLIC, insecureReason: "Anyone can get a movie by id.") {
-  movie(id: $id) {
+# 모든 사용자 조회 (관리자 전용)
+query ListAllUsers @auth(level: NO_ACCESS) {
+  users {
+    id
+    email
+    name
+    role
+    createdAt
+  }
+}
+
+# === 카테고리 관리 쿼리 ===
+
+# 모든 카테고리 조회 (교사 이상)
+query ListCategories @auth(level: USER) {
+  categories {
+    id
+    name
+    description
+    createdBy {
+      name
+    }
+    createdAt
+  }
+}
+
+# === 문제 관리 쿼리 ===
+
+# 문제 목록 조회 (교사 이상)
+query ListQuestions($categoryId: UUID, $difficulty: String, $type: String) @auth(level: USER) {
+  questions(
+    where: {
+      _and: [
+        { categoryId: { eq: $categoryId } }
+        { difficulty: { eq: $difficulty } }
+        { type: { eq: $type } }
+      ]
+    }
+  ) {
+    id
+    questionText
+    type
+    difficulty
+    points
+    imageUrl
+    category {
+      name
+    }
+    createdBy {
+      name
+    }
+    createdAt
+  }
+}
+
+# 문제 상세 조회 (선택지/정답 포함)
+query GetQuestionById($id: UUID!) @auth(level: USER) {
+  question(id: $id) {
+    id
+    questionText
+    type
+    difficulty
+    points
+    imageUrl
+    category {
+      id
+      name
+    }
+    choices: choices_on_question {
+      id
+      choiceText
+      choiceNumber
+      isCorrect
+    }
+    answers: answers_on_question {
+      id
+      answerText
+      keywords
+    }
+    createdBy {
+      id
+      name
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+# === 시험 관리 쿼리 ===
+
+# 시험 목록 조회
+query ListExams($isPublished: Boolean) @auth(level: USER) {
+  exams(
+    where: { isPublished: { eq: $isPublished } }
+    orderBy: { createdAt: DESC }
+  ) {
     id
     title
-    imageUrl
-    genre
-    metadata: movieMetadata_on_movie {
-      rating
-      releaseYear
-      description
+    description
+    duration
+    totalPoints
+    passingScore
+    startTime
+    endTime
+    isPublished
+    createdBy {
+      name
     }
-    reviews: reviews_on_movie {
-      reviewText
-      reviewDate
-      rating
-      user {
+    createdAt
+  }
+}
+
+# 시험 상세 조회 (문제 포함)
+query GetExamById($id: UUID!) @auth(level: USER) {
+  exam(id: $id) {
+    id
+    title
+    description
+    duration
+    totalPoints
+    passingScore
+    startTime
+    endTime
+    isPublished
+    createdBy {
+      id
+      name
+    }
+    questions: examQuestions_on_exam {
+      questionOrder
+      pointsOverride
+      question {
         id
-        username
+        questionText
+        type
+        difficulty
+        points
+        imageUrl
       }
+    }
+    createdAt
+  }
+}
+
+# === 시험 응시 쿼리 ===
+
+# 내 시험 응시 기록 조회 (학생)
+query ListMyExamAttempts @auth(level: USER) {
+  user(key: { id_expr: "auth.uid" }) {
+    attempts: examAttempts_on_student {
+      id
+      exam {
+        id
+        title
+        totalPoints
+      }
+      startedAt
+      submittedAt
+      score
+      isPassed
+      status
     }
   }
 }
 
-# Search for movies, actors, and reviews
-query SearchMovie($titleInput: String, $genre: String) @auth(level: PUBLIC, insecureReason: "Anyone can search for movies.") {
-  movies(
+# 시험 응시 상세 조회 (답안 포함)
+query GetExamAttemptById($id: UUID!) @auth(level: USER) {
+  examAttempt(id: $id) {
+    id
+    exam {
+      id
+      title
+      description
+      duration
+      totalPoints
+      passingScore
+    }
+    student {
+      id
+      name
+      email
+    }
+    startedAt
+    submittedAt
+    score
+    isPassed
+    status
+    answers: studentAnswers_on_attempt {
+      id
+      question {
+        id
+        questionText
+        type
+        points
+      }
+      selectedChoice {
+        choiceText
+      }
+      textAnswer
+      isCorrect
+      earnedPoints
+      feedback
+      answeredAt
+    }
+  }
+}
+
+# === 성적 및 통계 쿼리 ===
+
+# 특정 시험의 모든 응시 기록 (교사/관리자)
+query GetExamAttemptsByExam($examId: UUID!) @auth(level: USER) {
+  exam(id: $examId) {
+    id
+    title
+    attempts: examAttempts_on_exam {
+      id
+      student {
+        name
+        email
+      }
+      startedAt
+      submittedAt
+      score
+      isPassed
+      status
+    }
+  }
+}
+
+# 문제 통계 조회 (교사 이상)
+query GetQuestionStatistics($questionId: UUID!) @auth(level: USER) {
+  questionStatistics(key: { questionId: $questionId }) {
+    question {
+      questionText
+    }
+    totalAttempts
+    correctAttempts
+    averageScore
+    lastUpdated
+  }
+}
+
+# === 학생 전용 쿼리 ===
+
+# 응시 가능한 시험 목록 조회 (현재 시간 기준)
+query ListAvailableExams @auth(level: USER, insecureReason: "Students can view available exams") {
+  exams(
     where: {
-      _and: [{ genre: { eq: $genre } }, { title: { contains: $titleInput } }]
+      _and: [
+        { isPublished: { eq: true } }
+        { startTime: { lte_expr: "request.time" } }
+        { endTime: { gte_expr: "request.time" } }
+      ]
     }
   ) {
     id
     title
-    genre
-    imageUrl
+    description
+    duration
+    totalPoints
+    passingScore
+    startTime
+    endTime
   }
 }

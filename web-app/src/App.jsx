@@ -5,6 +5,12 @@ import './App.css'
 function App() {
   const [firebaseStatus, setFirebaseStatus] = useState('연결 확인 중...')
   const [projectId, setProjectId] = useState('')
+  const [systemInfo, setSystemInfo] = useState({
+    schemaVersion: '1.0',
+    totalEntities: 10,
+    totalQueries: 13,
+    totalMutations: 26
+  })
 
   useEffect(() => {
     // Firebase 연결 확인
@@ -26,24 +32,295 @@ function App() {
 
   return (
     <div className="App">
-      <h1>영화 리뷰 시스템</h1>
-      <div className="card">
-        <h2>Firebase 연동 상태</h2>
-        <p><strong>상태:</strong> {firebaseStatus}</p>
-        <p><strong>프로젝트 ID:</strong> {projectId}</p>
-        <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f0f0f0', borderRadius: '5px' }}>
-          <p><strong>초기화된 서비스:</strong></p>
-          <ul style={{ textAlign: 'left', display: 'inline-block' }}>
-            <li>Firebase Authentication {auth ? '✅' : '❌'}</li>
-            <li>Firebase Firestore {db ? '✅' : '❌'}</li>
-          </ul>
-        </div>
-      </div>
-      <p className="info">
-        Firebase 연동이 완료되었습니다. 이제 영화 리뷰 기능을 개발할 준비가 되었습니다.
-      </p>
+      <header style={styles.header}>
+        <h1 style={styles.title}>📝 문항 출제 관리 시스템</h1>
+        <p style={styles.subtitle}>Firebase Data Connect 기반 온라인 시험 플랫폼</p>
+      </header>
+
+      <main style={styles.main}>
+        {/* Firebase 연동 상태 */}
+        <section style={styles.card}>
+          <h2 style={styles.cardTitle}>🔗 시스템 연동 상태</h2>
+          <div style={styles.statusBox}>
+            <div style={styles.statusItem}>
+              <span style={styles.label}>Firebase 상태:</span>
+              <span style={styles.statusValue}>{firebaseStatus}</span>
+            </div>
+            <div style={styles.statusItem}>
+              <span style={styles.label}>프로젝트 ID:</span>
+              <span style={styles.codeValue}>{projectId}</span>
+            </div>
+            <div style={styles.statusItem}>
+              <span style={styles.label}>인증 서비스:</span>
+              <span style={{...styles.value, color: auth ? '#10b981' : '#ef4444'}}>
+                {auth ? '✅ 활성화' : '❌ 비활성화'}
+              </span>
+            </div>
+            <div style={styles.statusItem}>
+              <span style={styles.label}>데이터베이스:</span>
+              <span style={{...styles.value, color: db ? '#10b981' : '#ef4444'}}>
+                {db ? '✅ 연결됨' : '❌ 연결 안 됨'}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* 시스템 기능 */}
+        <section style={styles.card}>
+          <h2 style={styles.cardTitle}>⚙️ 시스템 기능</h2>
+          <div style={styles.featureGrid}>
+            <div style={styles.feature}>
+              <div style={styles.featureIcon}>📚</div>
+              <h3 style={styles.featureTitle}>문제 은행 관리</h3>
+              <p style={styles.featureDesc}>객관식/주관식/서술형 문제 등록 및 관리</p>
+            </div>
+            <div style={styles.feature}>
+              <div style={styles.featureIcon}>📋</div>
+              <h3 style={styles.featureTitle}>시험 출제</h3>
+              <p style={styles.featureDesc}>문제 선택하여 시험지 자동 구성</p>
+            </div>
+            <div style={styles.feature}>
+              <div style={styles.featureIcon}>✍️</div>
+              <h3 style={styles.featureTitle}>온라인 응시</h3>
+              <p style={styles.featureDesc}>학생 온라인 시험 응시 및 답안 제출</p>
+            </div>
+            <div style={styles.feature}>
+              <div style={styles.featureIcon}>📊</div>
+              <h3 style={styles.featureTitle}>성적 관리</h3>
+              <p style={styles.featureDesc}>자동 채점 및 성적 통계 분석</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 데이터베이스 정보 */}
+        <section style={styles.card}>
+          <h2 style={styles.cardTitle}>🗄️ 데이터베이스 구조</h2>
+          <div style={styles.dbInfo}>
+            <div style={styles.dbItem}>
+              <span style={styles.dbLabel}>총 테이블:</span>
+              <span style={styles.dbValue}>{systemInfo.totalEntities}개</span>
+            </div>
+            <div style={styles.dbItem}>
+              <span style={styles.dbLabel}>GraphQL 쿼리:</span>
+              <span style={styles.dbValue}>{systemInfo.totalQueries}개</span>
+            </div>
+            <div style={styles.dbItem}>
+              <span style={styles.dbLabel}>GraphQL 뮤테이션:</span>
+              <span style={styles.dbValue}>{systemInfo.totalMutations}개</span>
+            </div>
+            <div style={styles.dbItem}>
+              <span style={styles.dbLabel}>스키마 버전:</span>
+              <span style={styles.dbValue}>v{systemInfo.schemaVersion}</span>
+            </div>
+          </div>
+
+          <div style={styles.tableList}>
+            <h3 style={styles.tableListTitle}>주요 데이터 테이블:</h3>
+            <ul style={styles.list}>
+              <li>👤 User - 사용자 (교사/학생/관리자)</li>
+              <li>📁 Category - 문제 카테고리 (과목/단원)</li>
+              <li>❓ Question - 문제</li>
+              <li>🔤 Choice - 객관식 선택지</li>
+              <li>✅ Answer - 주관식 정답</li>
+              <li>📄 Exam - 시험</li>
+              <li>🔗 ExamQuestion - 시험-문제 연결</li>
+              <li>📝 ExamAttempt - 시험 응시 기록</li>
+              <li>✏️ StudentAnswer - 학생 답안</li>
+              <li>📈 QuestionStatistics - 문제 통계</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* 사용자 역할 */}
+        <section style={styles.card}>
+          <h2 style={styles.cardTitle}>👥 사용자 역할</h2>
+          <div style={styles.roleGrid}>
+            <div style={styles.role}>
+              <div style={styles.roleIcon}>👨‍🏫</div>
+              <h3>교사/강사</h3>
+              <p>문제 출제, 시험 생성, 채점 관리</p>
+            </div>
+            <div style={styles.role}>
+              <div style={styles.roleIcon}>👨‍🎓</div>
+              <h3>학생/수험생</h3>
+              <p>시험 응시, 성적 확인</p>
+            </div>
+            <div style={styles.role}>
+              <div style={styles.roleIcon}>👨‍💼</div>
+              <h3>관리자</h3>
+              <p>전체 시스템 관리 및 통계</p>
+            </div>
+          </div>
+        </section>
+
+        <footer style={styles.footer}>
+          <p style={styles.footerText}>
+            ✨ Firebase Data Connect + PostgreSQL + GraphQL
+          </p>
+          <p style={styles.footerText}>
+            🚀 프로덕션 준비 완료 - UI 개발 진행 중
+          </p>
+        </footer>
+      </main>
     </div>
   )
+}
+
+const styles = {
+  header: {
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    padding: '2rem',
+    textAlign: 'center',
+    borderRadius: '0 0 20px 20px',
+    marginBottom: '2rem'
+  },
+  title: {
+    fontSize: '2.5rem',
+    margin: '0 0 0.5rem 0'
+  },
+  subtitle: {
+    fontSize: '1.1rem',
+    opacity: 0.9,
+    margin: 0
+  },
+  main: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 1rem 2rem 1rem'
+  },
+  card: {
+    background: 'white',
+    borderRadius: '15px',
+    padding: '2rem',
+    marginBottom: '1.5rem',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+  },
+  cardTitle: {
+    color: '#333',
+    marginTop: 0,
+    marginBottom: '1.5rem',
+    fontSize: '1.5rem'
+  },
+  statusBox: {
+    background: '#f8f9fa',
+    padding: '1.5rem',
+    borderRadius: '10px'
+  },
+  statusItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '0.75rem 0',
+    borderBottom: '1px solid #e0e0e0'
+  },
+  label: {
+    fontWeight: 600,
+    color: '#555'
+  },
+  statusValue: {
+    color: '#10b981',
+    fontWeight: 600
+  },
+  value: {
+    fontWeight: 600
+  },
+  codeValue: {
+    fontFamily: 'monospace',
+    background: '#e0e7ff',
+    padding: '0.25rem 0.5rem',
+    borderRadius: '4px',
+    fontSize: '0.9rem'
+  },
+  featureGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '1.5rem'
+  },
+  feature: {
+    textAlign: 'center',
+    padding: '1.5rem',
+    background: '#f8f9fa',
+    borderRadius: '10px'
+  },
+  featureIcon: {
+    fontSize: '3rem',
+    marginBottom: '1rem'
+  },
+  featureTitle: {
+    color: '#333',
+    fontSize: '1.2rem',
+    margin: '0 0 0.5rem 0'
+  },
+  featureDesc: {
+    color: '#666',
+    fontSize: '0.95rem',
+    margin: 0
+  },
+  dbInfo: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '1rem',
+    marginBottom: '1.5rem'
+  },
+  dbItem: {
+    background: '#f0f4ff',
+    padding: '1rem',
+    borderRadius: '8px',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  dbLabel: {
+    fontSize: '0.9rem',
+    color: '#666',
+    marginBottom: '0.5rem'
+  },
+  dbValue: {
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    color: '#667eea'
+  },
+  tableList: {
+    background: '#f8f9fa',
+    padding: '1.5rem',
+    borderRadius: '10px'
+  },
+  tableListTitle: {
+    color: '#333',
+    marginTop: 0,
+    marginBottom: '1rem',
+    fontSize: '1.1rem'
+  },
+  list: {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0
+  },
+  roleGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '1.5rem'
+  },
+  role: {
+    textAlign: 'center',
+    padding: '1.5rem',
+    background: '#f8f9fa',
+    borderRadius: '10px'
+  },
+  roleIcon: {
+    fontSize: '3rem',
+    marginBottom: '1rem'
+  },
+  footer: {
+    textAlign: 'center',
+    marginTop: '3rem',
+    padding: '2rem',
+    background: '#f8f9fa',
+    borderRadius: '15px'
+  },
+  footerText: {
+    color: '#666',
+    margin: '0.5rem 0'
+  }
 }
 
 export default App

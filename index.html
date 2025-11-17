@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>영화 리뷰 시스템</title>
+    <title>문항 출제 관리 시스템</title>
     <style>
         * {
             margin: 0;
@@ -25,10 +25,19 @@
             background: white;
             border-radius: 20px;
             padding: 40px;
-            max-width: 600px;
+            max-width: 900px;
             width: 100%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
             text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
         }
 
         h1 {
@@ -56,25 +65,77 @@
             font-size: 1.3em;
         }
 
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
         .info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #e0e0e0;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
         }
 
-        .info-item:last-child {
-            border-bottom: none;
+        .info-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
         }
 
-        .label {
-            font-weight: 600;
-            color: #555;
-        }
-
-        .value {
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: bold;
             color: #667eea;
-            font-family: 'Courier New', monospace;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .feature {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .feature h3 {
+            color: #333;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .feature p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .tech-badge {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
         }
 
         .button-group {
@@ -82,10 +143,10 @@
             gap: 15px;
             margin-top: 30px;
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .btn {
-            flex: 1;
             padding: 15px 30px;
             border: none;
             border-radius: 10px;
@@ -95,7 +156,8 @@
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
-            min-width: 150px;
+            min-width: 200px;
+            text-align: center;
         }
 
         .btn-primary {
@@ -125,28 +187,8 @@
             border-radius: 20px;
             font-size: 14px;
             font-weight: 600;
-        }
-
-        .status.active {
             background: #d4edda;
             color: #155724;
-        }
-
-        .tech-stack {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin: 20px 0;
-        }
-
-        .tech-badge {
-            background: #667eea;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
         }
 
         .footer {
@@ -155,6 +197,7 @@
             border-top: 2px solid #e0e0e0;
             color: #999;
             font-size: 14px;
+            text-align: center;
         }
 
         @media (max-width: 600px) {
@@ -166,84 +209,157 @@
                 font-size: 2em;
             }
 
-            .button-group {
-                flex-direction: column;
-            }
-
             .btn {
                 width: 100%;
+            }
+
+            .info-grid, .feature-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎬 영화 리뷰 시스템</h1>
-        <p class="subtitle">Firebase 기반 영화 리뷰 플랫폼</p>
+        <div class="header">
+            <div class="icon">📝</div>
+            <h1>문항 출제 관리 시스템</h1>
+            <p class="subtitle">Firebase 기반 온라인 시험 플랫폼</p>
+        </div>
 
         <div class="info-box">
-            <h2>프로젝트 정보</h2>
-            <div class="info-item">
-                <span class="label">프로젝트명</span>
-                <span class="value">exam-system</span>
-            </div>
-            <div class="info-item">
-                <span class="label">Firebase 프로젝트</span>
-                <span class="value">exam-system-28765</span>
-            </div>
-            <div class="info-item">
-                <span class="label">개발 서버</span>
-                <span class="status active">실행 중</span>
+            <h2>🎯 시스템 개요</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">프로젝트 ID</div>
+                    <div class="info-value" style="font-size: 1rem;">exam-system-28765</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">데이터베이스</div>
+                    <div class="info-value">PostgreSQL</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">API</div>
+                    <div class="info-value">GraphQL</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">상태</div>
+                    <div><span class="status">개발 중</span></div>
+                </div>
             </div>
         </div>
 
         <div class="info-box">
-            <h2>기술 스택</h2>
+            <h2>⚙️ 주요 기능</h2>
+            <div class="feature-grid">
+                <div class="feature">
+                    <div class="feature-icon">📚</div>
+                    <h3>문제 은행 관리</h3>
+                    <p>객관식/주관식 문제 등록</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📋</div>
+                    <h3>시험 출제</h3>
+                    <p>문제 선택 및 시험지 구성</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">✍️</div>
+                    <h3>온라인 응시</h3>
+                    <p>학생 시험 응시</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📊</div>
+                    <h3>성적 관리</h3>
+                    <p>자동 채점 및 통계</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h2>👥 사용자 역할</h2>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 10px; background: white; margin: 8px 0; border-radius: 8px;">
+                    <strong>👨‍🏫 교사/강사:</strong> 문제 출제, 시험 생성, 채점 관리
+                </li>
+                <li style="padding: 10px; background: white; margin: 8px 0; border-radius: 8px;">
+                    <strong>👨‍🎓 학생/수험생:</strong> 시험 응시, 성적 확인
+                </li>
+                <li style="padding: 10px; background: white; margin: 8px 0; border-radius: 8px;">
+                    <strong>👨‍💼 관리자:</strong> 전체 시스템 관리 및 통계
+                </li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h2>🛠 기술 스택</h2>
             <div class="tech-stack">
                 <span class="tech-badge">React 19</span>
                 <span class="tech-badge">Vite 7</span>
                 <span class="tech-badge">Firebase</span>
-                <span class="tech-badge">GraphQL</span>
+                <span class="tech-badge">Data Connect</span>
                 <span class="tech-badge">PostgreSQL</span>
+                <span class="tech-badge">GraphQL</span>
+                <span class="tech-badge">Firebase Auth</span>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h2>📊 데이터베이스 구조</h2>
+            <div style="background: white; padding: 15px; border-radius: 8px;">
+                <p style="color: #666; margin-bottom: 15px;">
+                    <strong>10개 테이블</strong> | <strong>13개 쿼리</strong> | <strong>26개 뮤테이션</strong>
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; font-size: 0.9rem;">
+                    <div>👤 User</div>
+                    <div>📁 Category</div>
+                    <div>❓ Question</div>
+                    <div>🔤 Choice</div>
+                    <div>✅ Answer</div>
+                    <div>📄 Exam</div>
+                    <div>🔗 ExamQuestion</div>
+                    <div>📝 ExamAttempt</div>
+                    <div>✏️ StudentAnswer</div>
+                    <div>📈 Statistics</div>
+                </div>
             </div>
         </div>
 
         <div class="button-group">
             <a href="http://localhost:5173" class="btn btn-primary" target="_blank">
-                🚀 웹 앱 실행
+                🚀 시스템 실행
             </a>
-            <a href="http://localhost:5173" class="btn btn-secondary" target="_blank">
-                🔍 Firebase 연동 확인
+            <a href="https://github.com/jjangsamnet/exam-system" class="btn btn-secondary" target="_blank">
+                📂 GitHub 저장소
             </a>
         </div>
 
         <div class="footer">
-            <p>개발 서버가 실행 중이어야 접속할 수 있습니다.</p>
-            <p>서버 실행: <code>cd web-app && npm run dev</code></p>
+            <p><strong>개발 서버:</strong> http://localhost:5173</p>
+            <p><strong>GitHub:</strong> https://github.com/jjangsamnet/exam-system</p>
+            <p style="margin-top: 15px; color: #667eea; font-weight: 600;">
+                ✨ Firebase Data Connect + PostgreSQL + GraphQL 기반 시스템
+            </p>
         </div>
     </div>
 
     <script>
         // 개발 서버 상태 확인
         async function checkServerStatus() {
+            const statusElement = document.querySelector('.status');
             try {
-                const response = await fetch('http://localhost:5173', { mode: 'no-cors' });
-                console.log('개발 서버가 실행 중입니다.');
+                await fetch('http://localhost:5173', { mode: 'no-cors' });
+                statusElement.textContent = '실행 중';
+                statusElement.style.background = '#d4edda';
+                statusElement.style.color = '#155724';
             } catch (error) {
-                const statusElement = document.querySelector('.status.active');
-                if (statusElement) {
-                    statusElement.classList.remove('active');
-                    statusElement.style.background = '#f8d7da';
-                    statusElement.style.color = '#721c24';
-                    statusElement.textContent = '중지됨';
-                }
-                console.log('개발 서버가 실행되지 않았습니다.');
+                statusElement.textContent = '중지됨';
+                statusElement.style.background = '#f8d7da';
+                statusElement.style.color = '#721c24';
             }
         }
 
         // 페이지 로드 시 서버 상태 확인
         checkServerStatus();
-
         // 5초마다 서버 상태 확인
         setInterval(checkServerStatus, 5000);
     </script>

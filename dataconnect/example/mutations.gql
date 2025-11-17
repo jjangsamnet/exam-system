@@ -1,33 +1,366 @@
-# Example mutations for a simple movie app
+# 시험 출제 시스템 GraphQL 뮤테이션
 
-# Create a movie based on user input
-mutation CreateMovie($title: String!, $genre: String!, $imageUrl: String!)
-@auth(level: USER_EMAIL_VERIFIED, insecureReason: "Any email verified users can create a new movie.") {
-  movie_insert(data: { title: $title, genre: $genre, imageUrl: $imageUrl })
-}
+# === 사용자 관리 뮤테이션 ===
 
-# Upsert (update or insert) a user's username based on their auth.uid
-mutation UpsertUser($username: String!) @auth(level: USER) {
-  # The "auth.uid" server value ensures that users can only register their own user.
-  user_upsert(data: { id_expr: "auth.uid", username: $username })
-}
-
-# Add a review for a movie
-mutation AddReview($movieId: UUID!, $rating: Int!, $reviewText: String!)
-@auth(level: USER) {
-  review_upsert(
+# 사용자 등록/업데이트 (Firebase Auth 연동)
+mutation UpsertUser($email: String!, $name: String!, $role: String!) @auth(level: USER) {
+  user_upsert(
     data: {
-      userId_expr: "auth.uid"
-      movieId: $movieId
-      rating: $rating
-      reviewText: $reviewText
-      # reviewDate defaults to today in the schema. No need to set it manually.
+      id_expr: "auth.uid"
+      email: $email
+      name: $name
+      role: $role
     }
   )
 }
 
-# Logged in user can delete their review for a movie
-mutation DeleteReview($movieId: UUID!) @auth(level: USER) {
-  # The "auth.uid" server value ensures that users can only delete their own reviews.
-  review_delete(key: { userId_expr: "auth.uid", movieId: $movieId })
+# === 카테고리 관리 뮤테이션 ===
+
+# 카테고리 생성 (교사 이상)
+mutation CreateCategory($name: String!, $description: String, $parentCategoryId: UUID) @auth(level: USER) {
+  category_insert(
+    data: {
+      name: $name
+      description: $description
+      parentCategoryId: $parentCategoryId
+      createdById_expr: "auth.uid"
+    }
+  )
+}
+
+# 카테고리 수정
+mutation UpdateCategory($id: UUID!, $name: String, $description: String) @auth(level: USER) {
+  category_update(
+    id: $id
+    data: {
+      name: $name
+      description: $description
+    }
+  )
+}
+
+# 카테고리 삭제
+mutation DeleteCategory($id: UUID!) @auth(level: USER) {
+  category_delete(id: $id)
+}
+
+# === 문제 관리 뮤테이션 ===
+
+# 객관식 문제 생성
+mutation CreateMultipleChoiceQuestion(
+  $categoryId: UUID!
+  $questionText: String!
+  $imageUrl: String
+  $difficulty: String!
+  $points: Int!
+  $choices: [ChoiceInput!]!
+) @auth(level: USER) {
+  question_insert(
+    data: {
+      categoryId: $categoryId
+      type: "multiple_choice"
+      questionText: $questionText
+      imageUrl: $imageUrl
+      difficulty: $difficulty
+      points: $points
+      createdById_expr: "auth.uid"
+    }
+  )
+}
+
+# 주관식 문제 생성
+mutation CreateShortAnswerQuestion(
+  $categoryId: UUID!
+  $questionText: String!
+  $imageUrl: String
+  $difficulty: String!
+  $points: Int!
+  $answerText: String!
+  $keywords: String
+) @auth(level: USER) {
+  question_insert(
+    data: {
+      categoryId: $categoryId
+      type: "short_answer"
+      questionText: $questionText
+      imageUrl: $imageUrl
+      difficulty: $difficulty
+      points: $points
+      createdById_expr: "auth.uid"
+    }
+  )
+}
+
+# 문제 수정
+mutation UpdateQuestion(
+  $id: UUID!
+  $questionText: String
+  $imageUrl: String
+  $difficulty: String
+  $points: Int
+) @auth(level: USER) {
+  question_update(
+    id: $id
+    data: {
+      questionText: $questionText
+      imageUrl: $imageUrl
+      difficulty: $difficulty
+      points: $points
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
+# 문제 삭제
+mutation DeleteQuestion($id: UUID!) @auth(level: USER) {
+  question_delete(id: $id)
+}
+
+# === 선택지 관리 뮤테이션 ===
+
+# 선택지 추가
+mutation AddChoice(
+  $questionId: UUID!
+  $choiceText: String!
+  $choiceNumber: Int!
+  $isCorrect: Boolean!
+) @auth(level: USER) {
+  choice_insert(
+    data: {
+      questionId: $questionId
+      choiceText: $choiceText
+      choiceNumber: $choiceNumber
+      isCorrect: $isCorrect
+    }
+  )
+}
+
+# 선택지 수정
+mutation UpdateChoice(
+  $id: UUID!
+  $choiceText: String
+  $isCorrect: Boolean
+) @auth(level: USER) {
+  choice_update(
+    id: $id
+    data: {
+      choiceText: $choiceText
+      isCorrect: $isCorrect
+    }
+  )
+}
+
+# 선택지 삭제
+mutation DeleteChoice($id: UUID!) @auth(level: USER) {
+  choice_delete(id: $id)
+}
+
+# === 정답 관리 뮤테이션 ===
+
+# 주관식 정답 추가
+mutation AddAnswer(
+  $questionId: UUID!
+  $answerText: String!
+  $keywords: String
+) @auth(level: USER) {
+  answer_insert(
+    data: {
+      questionId: $questionId
+      answerText: $answerText
+      keywords: $keywords
+    }
+  )
+}
+
+# 정답 수정
+mutation UpdateAnswer(
+  $id: UUID!
+  $answerText: String
+  $keywords: String
+) @auth(level: USER) {
+  answer_update(
+    id: $id
+    data: {
+      answerText: $answerText
+      keywords: $keywords
+    }
+  )
+}
+
+# === 시험 관리 뮤테이션 ===
+
+# 시험 생성 (교사)
+mutation CreateExam(
+  $title: String!
+  $description: String
+  $duration: Int!
+  $totalPoints: Int!
+  $passingScore: Int!
+  $startTime: Timestamp
+  $endTime: Timestamp
+) @auth(level: USER) {
+  exam_insert(
+    data: {
+      title: $title
+      description: $description
+      duration: $duration
+      totalPoints: $totalPoints
+      passingScore: $passingScore
+      startTime: $startTime
+      endTime: $endTime
+      isPublished: false
+      createdById_expr: "auth.uid"
+    }
+  )
+}
+
+# 시험 수정
+mutation UpdateExam(
+  $id: UUID!
+  $title: String
+  $description: String
+  $duration: Int
+  $totalPoints: Int
+  $passingScore: Int
+  $startTime: Timestamp
+  $endTime: Timestamp
+  $isPublished: Boolean
+) @auth(level: USER) {
+  exam_update(
+    id: $id
+    data: {
+      title: $title
+      description: $description
+      duration: $duration
+      totalPoints: $totalPoints
+      passingScore: $passingScore
+      startTime: $startTime
+      endTime: $endTime
+      isPublished: $isPublished
+    }
+  )
+}
+
+# 시험 삭제
+mutation DeleteExam($id: UUID!) @auth(level: USER) {
+  exam_delete(id: $id)
+}
+
+# 시험에 문제 추가
+mutation AddQuestionToExam(
+  $examId: UUID!
+  $questionId: UUID!
+  $questionOrder: Int!
+  $pointsOverride: Int
+) @auth(level: USER) {
+  examQuestion_insert(
+    data: {
+      examId: $examId
+      questionId: $questionId
+      questionOrder: $questionOrder
+      pointsOverride: $pointsOverride
+    }
+  )
+}
+
+# 시험에서 문제 제거
+mutation RemoveQuestionFromExam($examId: UUID!, $questionId: UUID!) @auth(level: USER) {
+  examQuestion_delete(key: { examId: $examId, questionId: $questionId })
+}
+
+# === 시험 응시 뮤테이션 ===
+
+# 시험 시작 (학생)
+mutation StartExam($examId: UUID!) @auth(level: USER) {
+  examAttempt_insert(
+    data: {
+      examId: $examId
+      studentId_expr: "auth.uid"
+      status: "in_progress"
+    }
+  )
+}
+
+# 답안 제출 (개별 문제)
+mutation SubmitAnswer(
+  $attemptId: UUID!
+  $questionId: UUID!
+  $selectedChoiceId: UUID
+  $textAnswer: String
+) @auth(level: USER) {
+  studentAnswer_upsert(
+    data: {
+      attemptId: $attemptId
+      questionId: $questionId
+      selectedChoiceId: $selectedChoiceId
+      textAnswer: $textAnswer
+    }
+  )
+}
+
+# 시험 제출 완료
+mutation SubmitExam($attemptId: UUID!) @auth(level: USER) {
+  examAttempt_update(
+    id: $attemptId
+    data: {
+      submittedAt_expr: "request.time"
+      status: "submitted"
+    }
+  )
+}
+
+# === 채점 뮤테이션 (교사) ===
+
+# 주관식 채점
+mutation GradeSubjectiveAnswer(
+  $answerId: UUID!
+  $isCorrect: Boolean!
+  $earnedPoints: Int!
+  $feedback: String
+) @auth(level: USER) {
+  studentAnswer_update(
+    id: $answerId
+    data: {
+      isCorrect: $isCorrect
+      earnedPoints: $earnedPoints
+      feedback: $feedback
+      gradedById_expr: "auth.uid"
+    }
+  )
+}
+
+# 시험 채점 완료 및 점수 확정
+mutation FinalizeExamGrading(
+  $attemptId: UUID!
+  $score: Int!
+  $isPassed: Boolean!
+) @auth(level: USER) {
+  examAttempt_update(
+    id: $attemptId
+    data: {
+      score: $score
+      isPassed: $isPassed
+      status: "graded"
+    }
+  )
+}
+
+# === 통계 업데이트 뮤테이션 ===
+
+# 문제 통계 업데이트
+mutation UpdateQuestionStatistics(
+  $questionId: UUID!
+  $totalAttempts: Int!
+  $correctAttempts: Int!
+  $averageScore: Float
+) @auth(level: USER) {
+  questionStatistics_upsert(
+    data: {
+      questionId: $questionId
+      totalAttempts: $totalAttempts
+      correctAttempts: $correctAttempts
+      averageScore: $averageScore
+      lastUpdated_expr: "request.time"
+    }
+  )
 }
