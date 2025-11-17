@@ -39,6 +39,8 @@ lerna-debug.log*
 .firebase/
 *-debug.log
 .runtimeconfig.json
+exportedData/
+/firebase-config.js
 
 # Generated files
 .dataconnect/

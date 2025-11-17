@@ -4,7 +4,10 @@
       "Bash(git init:*)",
       "Bash(echo:*)",
       "Bash(.gitignore)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(firebase:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []
