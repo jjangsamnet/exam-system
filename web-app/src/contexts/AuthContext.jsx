@@ -31,7 +31,8 @@ export const AuthProvider = ({ children }) => {
       const userData = {
         email: user.email,
         name: additionalData.name || user.displayName || user.email.split('@')[0],
-        role: additionalData.role || 'student' // 기본값: student
+        role: additionalData.role || 'student', // 기본값: student
+        schoolName: additionalData.schoolName || null // 학교명 (학생만 사용)
       }
 
       await upsertUser(userData)
@@ -43,10 +44,10 @@ export const AuthProvider = ({ children }) => {
   }
 
   // 이메일/비밀번호 회원가입
-  const signup = async (email, password, name, role = 'student') => {
+  const signup = async (email, password, name, role = 'student', schoolName = null) => {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password)
-      await syncUserProfile(result.user, { name, role })
+      await syncUserProfile(result.user, { name, role, schoolName })
       return result
     } catch (error) {
       console.error('회원가입 오류:', error)
@@ -66,11 +67,11 @@ export const AuthProvider = ({ children }) => {
   }
 
   // Google 로그인
-  const loginWithGoogle = async (role = 'student') => {
+  const loginWithGoogle = async (role = 'student', schoolName = null) => {
     try {
       const provider = new GoogleAuthProvider()
       const result = await signInWithPopup(auth, provider)
-      await syncUserProfile(result.user, { role })
+      await syncUserProfile(result.user, { role, schoolName })
       return result
     } catch (error) {
       console.error('Google 로그인 오류:', error)

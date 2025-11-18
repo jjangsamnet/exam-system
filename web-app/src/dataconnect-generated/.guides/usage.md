@@ -12,28 +12,28 @@ For each operation, there is a wrapper hook that can be used to call the operati
 
 Here are all of the hooks that get generated:
 ```ts
-import { useGetCurrentUser, useListAllUsers, useListCategories, useListQuestions, useGetQuestionById, useListExams, useGetExamById, useListMyExamAttempts, useGetExamAttemptById, useGetExamAttemptsByExam } from '@dataconnect/generated/react';
+import { useUpsertUser, useCreateCategory, useUpdateCategory, useDeleteCategory, useCreateQuestion, useUpdateQuestion, useDeleteQuestion, useAddChoice, useUpdateChoice, useDeleteChoice } from '@dataconnect/generated/react';
 // The types of these hooks are available in react/index.d.ts
 
-const { data, isPending, isSuccess, isError, error } = useGetCurrentUser();
+const { data, isPending, isSuccess, isError, error } = useUpsertUser(upsertUserVars);
 
-const { data, isPending, isSuccess, isError, error } = useListAllUsers();
+const { data, isPending, isSuccess, isError, error } = useCreateCategory(createCategoryVars);
 
-const { data, isPending, isSuccess, isError, error } = useListCategories();
+const { data, isPending, isSuccess, isError, error } = useUpdateCategory(updateCategoryVars);
 
-const { data, isPending, isSuccess, isError, error } = useListQuestions(listQuestionsVars);
+const { data, isPending, isSuccess, isError, error } = useDeleteCategory(deleteCategoryVars);
 
-const { data, isPending, isSuccess, isError, error } = useGetQuestionById(getQuestionByIdVars);
+const { data, isPending, isSuccess, isError, error } = useCreateQuestion(createQuestionVars);
 
-const { data, isPending, isSuccess, isError, error } = useListExams(listExamsVars);
+const { data, isPending, isSuccess, isError, error } = useUpdateQuestion(updateQuestionVars);
 
-const { data, isPending, isSuccess, isError, error } = useGetExamById(getExamByIdVars);
+const { data, isPending, isSuccess, isError, error } = useDeleteQuestion(deleteQuestionVars);
 
-const { data, isPending, isSuccess, isError, error } = useListMyExamAttempts();
+const { data, isPending, isSuccess, isError, error } = useAddChoice(addChoiceVars);
 
-const { data, isPending, isSuccess, isError, error } = useGetExamAttemptById(getExamAttemptByIdVars);
+const { data, isPending, isSuccess, isError, error } = useUpdateChoice(updateChoiceVars);
 
-const { data, isPending, isSuccess, isError, error } = useGetExamAttemptsByExam(getExamAttemptsByExamVars);
+const { data, isPending, isSuccess, isError, error } = useDeleteChoice(deleteChoiceVars);
 
 ```
 
@@ -72,38 +72,38 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { getCurrentUser, listAllUsers, listCategories, listQuestions, getQuestionById, listExams, getExamById, listMyExamAttempts, getExamAttemptById, getExamAttemptsByExam } from '@dataconnect/generated';
+import { upsertUser, createCategory, updateCategory, deleteCategory, createQuestion, updateQuestion, deleteQuestion, addChoice, updateChoice, deleteChoice } from '@dataconnect/generated';
 
 
-// Operation GetCurrentUser: 
-const { data } = await GetCurrentUser(dataConnect);
+// Operation UpsertUser:  For variables, look at type UpsertUserVars in ../index.d.ts
+const { data } = await UpsertUser(dataConnect, upsertUserVars);
 
-// Operation ListAllUsers: 
-const { data } = await ListAllUsers(dataConnect);
+// Operation CreateCategory:  For variables, look at type CreateCategoryVars in ../index.d.ts
+const { data } = await CreateCategory(dataConnect, createCategoryVars);
 
-// Operation ListCategories: 
-const { data } = await ListCategories(dataConnect);
+// Operation UpdateCategory:  For variables, look at type UpdateCategoryVars in ../index.d.ts
+const { data } = await UpdateCategory(dataConnect, updateCategoryVars);
 
-// Operation ListQuestions:  For variables, look at type ListQuestionsVars in ../index.d.ts
-const { data } = await ListQuestions(dataConnect, listQuestionsVars);
+// Operation DeleteCategory:  For variables, look at type DeleteCategoryVars in ../index.d.ts
+const { data } = await DeleteCategory(dataConnect, deleteCategoryVars);
 
-// Operation GetQuestionById:  For variables, look at type GetQuestionByIdVars in ../index.d.ts
-const { data } = await GetQuestionById(dataConnect, getQuestionByIdVars);
+// Operation CreateQuestion:  For variables, look at type CreateQuestionVars in ../index.d.ts
+const { data } = await CreateQuestion(dataConnect, createQuestionVars);
 
-// Operation ListExams:  For variables, look at type ListExamsVars in ../index.d.ts
-const { data } = await ListExams(dataConnect, listExamsVars);
+// Operation UpdateQuestion:  For variables, look at type UpdateQuestionVars in ../index.d.ts
+const { data } = await UpdateQuestion(dataConnect, updateQuestionVars);
 
-// Operation GetExamById:  For variables, look at type GetExamByIdVars in ../index.d.ts
-const { data } = await GetExamById(dataConnect, getExamByIdVars);
+// Operation DeleteQuestion:  For variables, look at type DeleteQuestionVars in ../index.d.ts
+const { data } = await DeleteQuestion(dataConnect, deleteQuestionVars);
 
-// Operation ListMyExamAttempts: 
-const { data } = await ListMyExamAttempts(dataConnect);
+// Operation AddChoice:  For variables, look at type AddChoiceVars in ../index.d.ts
+const { data } = await AddChoice(dataConnect, addChoiceVars);
 
-// Operation GetExamAttemptById:  For variables, look at type GetExamAttemptByIdVars in ../index.d.ts
-const { data } = await GetExamAttemptById(dataConnect, getExamAttemptByIdVars);
+// Operation UpdateChoice:  For variables, look at type UpdateChoiceVars in ../index.d.ts
+const { data } = await UpdateChoice(dataConnect, updateChoiceVars);
 
-// Operation GetExamAttemptsByExam:  For variables, look at type GetExamAttemptsByExamVars in ../index.d.ts
-const { data } = await GetExamAttemptsByExam(dataConnect, getExamAttemptsByExamVars);
+// Operation DeleteChoice:  For variables, look at type DeleteChoiceVars in ../index.d.ts
+const { data } = await DeleteChoice(dataConnect, deleteChoiceVars);
 
 
 ```

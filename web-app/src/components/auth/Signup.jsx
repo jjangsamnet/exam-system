@@ -9,7 +9,8 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'student'
+    role: 'student',
+    schoolName: ''
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -42,10 +43,15 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
       return
     }
 
+    if (formData.role === 'student' && !formData.schoolName.trim()) {
+      setError('학교명을 입력해주세요.')
+      return
+    }
+
     setLoading(true)
 
     try {
-      await signup(formData.email, formData.password, formData.name, formData.role)
+      await signup(formData.email, formData.password, formData.name, formData.role, formData.schoolName)
 
       // Show approval message for teacher/admin
       if (formData.role === 'teacher' || formData.role === 'admin') {
@@ -76,10 +82,17 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
 
   const handleGoogleSignup = async () => {
     setError('')
+
+    // Validate school name for students
+    if (formData.role === 'student' && !formData.schoolName.trim()) {
+      setError('학교명을 입력해주세요.')
+      return
+    }
+
     setLoading(true)
 
     try {
-      await loginWithGoogle(formData.role)
+      await loginWithGoogle(formData.role, formData.schoolName)
 
       // Show approval message for teacher
       if (formData.role === 'teacher') {
@@ -126,6 +139,21 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
 
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
+              <label htmlFor="role">사용자 유형</label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                disabled={loading}
+              >
+                <option value="student">학생/수험생</option>
+                <option value="teacher">교사/강사</option>
+                <option value="admin">관리자</option>
+              </select>
+            </div>
+
+            <div className="form-group">
               <label htmlFor="name">이름</label>
               <input
                 type="text"
@@ -138,6 +166,22 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
                 disabled={loading}
               />
             </div>
+
+            {formData.role === 'student' && (
+              <div className="form-group">
+                <label htmlFor="schoolName">학교명</label>
+                <input
+                  type="text"
+                  id="schoolName"
+                  name="schoolName"
+                  value={formData.schoolName}
+                  onChange={handleChange}
+                  placeholder="예: 서울고등학교"
+                  required
+                  disabled={loading}
+                />
+              </div>
+            )}
 
             <div className="form-group">
               <label htmlFor="email">이메일</label>
@@ -179,21 +223,6 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
                 required
                 disabled={loading}
               />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="role">사용자 유형</label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                disabled={loading}
-              >
-                <option value="student">학생/수험생</option>
-                <option value="teacher">교사/강사</option>
-                <option value="admin">관리자</option>
-              </select>
             </div>
 
             <button

@@ -6,6 +6,7 @@ type User @table {
   email: String!
   name: String! @col(dataType: "varchar(100)")
   role: String! @col(dataType: "varchar(20)") # 'teacher', 'student', 'admin'
+  schoolName: String @col(dataType: "varchar(200)") # 학교명 (학생만 사용)
   approvalStatus: String @col(dataType: "varchar(20)") # 'pending', 'approved', 'rejected' - null means approved (for backward compatibility)
   createdAt: Timestamp! @default(expr: "request.time")
 }

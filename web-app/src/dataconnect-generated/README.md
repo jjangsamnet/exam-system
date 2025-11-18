@@ -1442,6 +1442,7 @@ export interface UpsertUserVariables {
   email: string;
   name: string;
   role: string;
+  schoolName?: string | null;
 }
 ```
 ### Return Type
@@ -1464,13 +1465,14 @@ const upsertUserVars: UpsertUserVariables = {
   email: ..., 
   name: ..., 
   role: ..., 
+  schoolName: ..., // optional
 };
 
 // Call the `upsertUser()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await upsertUser(upsertUserVars);
 // Variables can be defined inline as well.
-const { data } = await upsertUser({ email: ..., name: ..., role: ..., });
+const { data } = await upsertUser({ email: ..., name: ..., role: ..., schoolName: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1496,12 +1498,13 @@ const upsertUserVars: UpsertUserVariables = {
   email: ..., 
   name: ..., 
   role: ..., 
+  schoolName: ..., // optional
 };
 
 // Call the `upsertUserRef()` function to get a reference to the mutation.
 const ref = upsertUserRef(upsertUserVars);
 // Variables can be defined inline as well.
-const ref = upsertUserRef({ email: ..., name: ..., role: ..., });
+const ref = upsertUserRef({ email: ..., name: ..., role: ..., schoolName: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
