@@ -521,7 +521,10 @@ const styles = {
   list: {
     listStyle: 'none',
     padding: 0,
-    margin: 0
+    margin: 0,
+    color: '#1f2937',
+    fontSize: '15px',
+    lineHeight: '2'
   },
   roleGrid: {
     display: 'grid',
@@ -532,7 +535,8 @@ const styles = {
     textAlign: 'center',
     padding: '1.5rem',
     background: '#f8f9fa',
-    borderRadius: '10px'
+    borderRadius: '10px',
+    color: '#1f2937'
   },
   roleIcon: {
     fontSize: '3rem',

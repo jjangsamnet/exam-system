@@ -60,10 +60,17 @@ const Login = ({ onClose, onSwitchToSignup }) => {
       onClose && onClose()
     } catch (error) {
       console.error('Google 로그인 실패:', error)
+      console.error('Error code:', error.code)
+      console.error('Error message:', error.message)
+
       if (error.code === 'auth/popup-closed-by-user') {
         setError('로그인이 취소되었습니다.')
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setError('승인되지 않은 도메인입니다. Firebase Console에서 localhost를 승인된 도메인에 추가해주세요.')
+      } else if (error.code === 'auth/operation-not-allowed') {
+        setError('Google 로그인이 활성화되지 않았습니다. Firebase Console에서 Google 인증을 활성화해주세요.')
       } else {
-        setError('Google 로그인에 실패했습니다.')
+        setError(`Google 로그인 실패: ${error.message || error.code || '알 수 없는 오류'}`)
       }
     } finally {
       setLoading(false)

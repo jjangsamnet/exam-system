@@ -78,11 +78,17 @@ const ExamBuilder = ({ onClose }) => {
     }
 
     const newSelectedQuestions = [...examData.selectedQuestions]
-    const newIndex = direction === 'up' ? index - 1 : index + 1
+    let newIndex
+    if (direction === 'up') {
+      newIndex = index - 1
+    } else {
+      newIndex = index + 1
+    }
 
-    // Swap
-    [newSelectedQuestions[index], newSelectedQuestions[newIndex]] =
-    [newSelectedQuestions[newIndex], newSelectedQuestions[index]]
+    // Swap using temp variable
+    const temp = newSelectedQuestions[index]
+    newSelectedQuestions[index] = newSelectedQuestions[newIndex]
+    newSelectedQuestions[newIndex] = temp
 
     // Update order
     newSelectedQuestions.forEach((q, i) => {

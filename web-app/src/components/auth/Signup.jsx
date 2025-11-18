@@ -46,6 +46,12 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
 
     try {
       await signup(formData.email, formData.password, formData.name, formData.role)
+
+      // Show approval message for teacher/admin
+      if (formData.role === 'teacher' || formData.role === 'admin') {
+        alert(`회원가입이 완료되었습니다!\n\n${formData.role === 'admin' ? '관리자' : '교사'} 계정은 관리자의 승인 후 사용하실 수 있습니다.\n승인 완료 시 이메일로 안내드리겠습니다.`)
+      }
+
       onClose && onClose()
     } catch (error) {
       console.error('회원가입 실패:', error)
@@ -77,10 +83,17 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
       onClose && onClose()
     } catch (error) {
       console.error('Google 회원가입 실패:', error)
+      console.error('Error code:', error.code)
+      console.error('Error message:', error.message)
+
       if (error.code === 'auth/popup-closed-by-user') {
         setError('가입이 취소되었습니다.')
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setError('승인되지 않은 도메인입니다. Firebase Console에서 localhost를 승인된 도메인에 추가해주세요.')
+      } else if (error.code === 'auth/operation-not-allowed') {
+        setError('Google 로그인이 활성화되지 않았습니다. Firebase Console에서 Google 인증을 활성화해주세요.')
       } else {
-        setError('Google 회원가입에 실패했습니다.')
+        setError(`Google 회원가입 실패: ${error.message || error.code || '알 수 없는 오류'}`)
       }
     } finally {
       setLoading(false)
@@ -186,22 +199,44 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
             </button>
           </form>
 
-          <div className="divider">
-            <span>또는</span>
-          </div>
+          {formData.role === 'student' && (
+            <>
+              <div className="divider">
+                <span>또는</span>
+              </div>
 
-          <button
-            className="auth-btn google"
-            onClick={handleGoogleSignup}
-            disabled={loading}
-          >
-            <img
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-              alt="Google"
-              className="google-icon"
-            />
-            Google로 가입
-          </button>
+              <button
+                className="auth-btn google"
+                onClick={handleGoogleSignup}
+                disabled={loading}
+              >
+                <img
+                  src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                  alt="Google"
+                  className="google-icon"
+                />
+                Google로 가입
+              </button>
+            </>
+          )}
+
+          {(formData.role === 'teacher' || formData.role === 'admin') && (
+            <div style={{
+              background: '#fef3c7',
+              border: '2px solid #fde68a',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginTop: '20px',
+              color: '#92400e',
+              fontSize: '14px',
+              textAlign: 'center'
+            }}>
+              <strong>📋 {formData.role === 'admin' ? '관리자' : '교사'} 계정 안내</strong>
+              <p style={{margin: '8px 0 0 0'}}>
+                회원가입 후 관리자의 승인이 필요합니다.
+              </p>
+            </div>
+          )}
 
           <div className="auth-footer">
             <p>
