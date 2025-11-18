@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { auth, db } from './firebase-config'
 import QuestionForm from './components/QuestionForm'
 import QuestionList from './components/QuestionList'
 import ExamBuilder from './components/ExamBuilder'
+import Login from './components/auth/Login'
+import Signup from './components/auth/Signup'
 import './App.css'
 
 // QueryClient 인스턴스 생성
@@ -16,12 +19,15 @@ const queryClient = new QueryClient({
   }
 })
 
-function App() {
+function AppContent() {
+  const { currentUser, userProfile, logout } = useAuth()
   const [firebaseStatus, setFirebaseStatus] = useState('연결 확인 중...')
   const [projectId, setProjectId] = useState('')
   const [showQuestionForm, setShowQuestionForm] = useState(false)
   const [showQuestionList, setShowQuestionList] = useState(false)
   const [showExamBuilder, setShowExamBuilder] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
+  const [showSignup, setShowSignup] = useState(false)
   const [systemInfo, setSystemInfo] = useState({
     schemaVersion: '1.0',
     totalEntities: 10,
@@ -47,12 +53,55 @@ function App() {
     }
   }, [])
 
+  const handleLogout = async () => {
+    try {
+      await logout()
+      alert('로그아웃되었습니다.')
+    } catch (error) {
+      console.error('로그아웃 오류:', error)
+    }
+  }
+
+  const getRoleName = (role) => {
+    const roleNames = {
+      'teacher': '교사',
+      'student': '학생',
+      'admin': '관리자'
+    }
+    return roleNames[role] || role
+  }
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="App">
+    <div className="App">
       <header style={styles.header}>
-        <h1 style={styles.title}>📝 문항 출제 관리 시스템</h1>
-        <p style={styles.subtitle}>Firebase Data Connect 기반 온라인 시험 플랫폼</p>
+        <div style={styles.headerContent}>
+          <div>
+            <h1 style={styles.title}>📝 문항 출제 관리 시스템</h1>
+            <p style={styles.subtitle}>Firebase Data Connect 기반 온라인 시험 플랫폼</p>
+          </div>
+          <div style={styles.authSection}>
+            {currentUser ? (
+              <div style={styles.userInfo}>
+                <div style={styles.userDetails}>
+                  <span style={styles.userName}>{userProfile?.name || '사용자'}</span>
+                  <span style={styles.userRole}>({getRoleName(userProfile?.role)})</span>
+                </div>
+                <button style={styles.logoutBtn} onClick={handleLogout}>
+                  로그아웃
+                </button>
+              </div>
+            ) : (
+              <div style={styles.authButtons}>
+                <button style={styles.loginBtn} onClick={() => setShowLogin(true)}>
+                  로그인
+                </button>
+                <button style={styles.signupBtn} onClick={() => setShowSignup(true)}>
+                  회원가입
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </header>
 
       <main style={styles.main}>
@@ -222,7 +271,37 @@ function App() {
       {showExamBuilder && (
         <ExamBuilder onClose={() => setShowExamBuilder(false)} />
       )}
-      </div>
+
+      {/* Auth Modals */}
+      {showLogin && (
+        <Login
+          onClose={() => setShowLogin(false)}
+          onSwitchToSignup={() => {
+            setShowLogin(false)
+            setShowSignup(true)
+          }}
+        />
+      )}
+
+      {showSignup && (
+        <Signup
+          onClose={() => setShowSignup(false)}
+          onSwitchToLogin={() => {
+            setShowSignup(false)
+            setShowLogin(true)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </QueryClientProvider>
   )
 }
@@ -232,9 +311,16 @@ const styles = {
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: 'white',
     padding: '2rem',
-    textAlign: 'center',
     borderRadius: '0 0 20px 20px',
     marginBottom: '2rem'
+  },
+  headerContent: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    maxWidth: '1200px',
+    margin: '0 auto',
+    gap: '2rem'
   },
   title: {
     fontSize: '2.5rem',
@@ -244,6 +330,66 @@ const styles = {
     fontSize: '1.1rem',
     opacity: 0.9,
     margin: 0
+  },
+  authSection: {
+    display: 'flex',
+    alignItems: 'center'
+  },
+  userInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: '8px'
+  },
+  userDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end'
+  },
+  userName: {
+    fontSize: '1.1rem',
+    fontWeight: 600
+  },
+  userRole: {
+    fontSize: '0.9rem',
+    opacity: 0.8
+  },
+  logoutBtn: {
+    padding: '8px 16px',
+    background: 'rgba(255, 255, 255, 0.2)',
+    border: '2px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '8px',
+    color: 'white',
+    fontSize: '14px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  },
+  authButtons: {
+    display: 'flex',
+    gap: '12px'
+  },
+  loginBtn: {
+    padding: '10px 20px',
+    background: 'rgba(255, 255, 255, 0.2)',
+    border: '2px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '8px',
+    color: 'white',
+    fontSize: '15px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  },
+  signupBtn: {
+    padding: '10px 20px',
+    background: 'white',
+    border: '2px solid white',
+    borderRadius: '8px',
+    color: '#667eea',
+    fontSize: '15px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s'
   },
   main: {
     maxWidth: '1200px',

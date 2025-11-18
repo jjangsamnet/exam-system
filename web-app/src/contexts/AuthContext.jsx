@@ -1,0 +1,127 @@
+import { createContext, useContext, useState, useEffect } from 'react'
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  onAuthStateChanged
+} from 'firebase/auth'
+import { auth } from '../firebase-config'
+import { upsertUser } from '../dataconnect-generated'
+
+const AuthContext = createContext({})
+
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider')
+  }
+  return context
+}
+
+export const AuthProvider = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState(null)
+  const [userProfile, setUserProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  // 사용자 프로필을 Data Connect에 저장/업데이트
+  const syncUserProfile = async (user, additionalData = {}) => {
+    try {
+      const userData = {
+        email: user.email,
+        name: additionalData.name || user.displayName || user.email.split('@')[0],
+        role: additionalData.role || 'student' // 기본값: student
+      }
+
+      await upsertUser(userData)
+      setUserProfile(userData)
+      console.log('사용자 프로필 동기화 완료:', userData)
+    } catch (error) {
+      console.error('사용자 프로필 동기화 실패:', error)
+    }
+  }
+
+  // 이메일/비밀번호 회원가입
+  const signup = async (email, password, name, role = 'student') => {
+    try {
+      const result = await createUserWithEmailAndPassword(auth, email, password)
+      await syncUserProfile(result.user, { name, role })
+      return result
+    } catch (error) {
+      console.error('회원가입 오류:', error)
+      throw error
+    }
+  }
+
+  // 이메일/비밀번호 로그인
+  const login = async (email, password) => {
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password)
+      return result
+    } catch (error) {
+      console.error('로그인 오류:', error)
+      throw error
+    }
+  }
+
+  // Google 로그인
+  const loginWithGoogle = async (role = 'student') => {
+    try {
+      const provider = new GoogleAuthProvider()
+      const result = await signInWithPopup(auth, provider)
+      await syncUserProfile(result.user, { role })
+      return result
+    } catch (error) {
+      console.error('Google 로그인 오류:', error)
+      throw error
+    }
+  }
+
+  // 로그아웃
+  const logout = async () => {
+    try {
+      await signOut(auth)
+      setUserProfile(null)
+    } catch (error) {
+      console.error('로그아웃 오류:', error)
+      throw error
+    }
+  }
+
+  // 인증 상태 변경 감지
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user)
+
+      if (user) {
+        // 로그인된 경우 프로필 동기화 (기존 사용자)
+        await syncUserProfile(user)
+      } else {
+        setUserProfile(null)
+      }
+
+      setLoading(false)
+    })
+
+    return unsubscribe
+  }, [])
+
+  const value = {
+    currentUser,
+    userProfile,
+    signup,
+    login,
+    loginWithGoogle,
+    logout,
+    loading
+  }
+
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  )
+}
+
+export default AuthContext
