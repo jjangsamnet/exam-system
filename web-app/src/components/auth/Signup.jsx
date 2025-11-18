@@ -80,6 +80,12 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
 
     try {
       await loginWithGoogle(formData.role)
+
+      // Show approval message for teacher
+      if (formData.role === 'teacher') {
+        alert(`회원가입이 완료되었습니다!\n\n교사 계정은 관리자의 승인 후 사용하실 수 있습니다.\n승인 완료 시 이메일로 안내드리겠습니다.`)
+      }
+
       onClose && onClose()
     } catch (error) {
       console.error('Google 회원가입 실패:', error)
@@ -199,7 +205,7 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
             </button>
           </form>
 
-          {formData.role === 'student' && (
+          {formData.role !== 'admin' && (
             <>
               <div className="divider">
                 <span>또는</span>
@@ -220,7 +226,7 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
             </>
           )}
 
-          {(formData.role === 'teacher' || formData.role === 'admin') && (
+          {formData.role === 'teacher' && (
             <div style={{
               background: '#fef3c7',
               border: '2px solid #fde68a',
@@ -231,9 +237,27 @@ const Signup = ({ onClose, onSwitchToLogin }) => {
               fontSize: '14px',
               textAlign: 'center'
             }}>
-              <strong>📋 {formData.role === 'admin' ? '관리자' : '교사'} 계정 안내</strong>
+              <strong>📋 교사 계정 안내</strong>
               <p style={{margin: '8px 0 0 0'}}>
                 회원가입 후 관리자의 승인이 필요합니다.
+              </p>
+            </div>
+          )}
+
+          {formData.role === 'admin' && (
+            <div style={{
+              background: '#fee2e2',
+              border: '2px solid #fecaca',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginTop: '20px',
+              color: '#991b1b',
+              fontSize: '14px',
+              textAlign: 'center'
+            }}>
+              <strong>🔒 관리자 계정 안내</strong>
+              <p style={{margin: '8px 0 0 0'}}>
+                관리자 계정은 이메일/비밀번호로만 가입 가능하며, 승인이 필요합니다.
               </p>
             </div>
           )}
