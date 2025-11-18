@@ -242,18 +242,18 @@ query GetExamAttemptsByExam($examId: UUID!) @auth(level: USER) {
   }
 }
 
-# 문제 통계 조회 (교사 이상)
-query GetQuestionStatistics($questionId: UUID!) @auth(level: USER) {
-  questionStatistics(key: { questionId: $questionId }) {
-    question {
-      questionText
-    }
-    totalAttempts
-    correctAttempts
-    averageScore
-    lastUpdated
-  }
-}
+# 문제 통계 조회 (교사 이상) - TODO: 스키마 수정 후 재구현
+# query GetQuestionStatistics($questionId: UUID!) @auth(level: USER) {
+#   questionStatistics(key: { question: { id: $questionId } }) {
+#     question {
+#       questionText
+#     }
+#     totalAttempts
+#     correctAttempts
+#     averageScore
+#     lastUpdated
+#   }
+# }
 
 # === 학생 전용 쿼리 ===
 
@@ -263,8 +263,8 @@ query ListAvailableExams @auth(level: USER, insecureReason: "Students can view a
     where: {
       _and: [
         { isPublished: { eq: true } }
-        { startTime: { lte_expr: "request.time" } }
-        { endTime: { gte_expr: "request.time" } }
+        { startTime: { le_expr: "request.time" } }
+        { endTime: { ge_expr: "request.time" } }
       ]
     }
   ) {

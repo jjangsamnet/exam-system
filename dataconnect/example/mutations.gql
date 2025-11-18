@@ -46,42 +46,19 @@ mutation DeleteCategory($id: UUID!) @auth(level: USER) {
 
 # === 문제 관리 뮤테이션 ===
 
-# 객관식 문제 생성
-mutation CreateMultipleChoiceQuestion(
+# 문제 생성 (모든 타입)
+mutation CreateQuestion(
   $categoryId: UUID!
+  $type: String!
   $questionText: String!
   $imageUrl: String
   $difficulty: String!
   $points: Int!
-  $choices: [ChoiceInput!]!
 ) @auth(level: USER) {
   question_insert(
     data: {
       categoryId: $categoryId
-      type: "multiple_choice"
-      questionText: $questionText
-      imageUrl: $imageUrl
-      difficulty: $difficulty
-      points: $points
-      createdById_expr: "auth.uid"
-    }
-  )
-}
-
-# 주관식 문제 생성
-mutation CreateShortAnswerQuestion(
-  $categoryId: UUID!
-  $questionText: String!
-  $imageUrl: String
-  $difficulty: String!
-  $points: Int!
-  $answerText: String!
-  $keywords: String
-) @auth(level: USER) {
-  question_insert(
-    data: {
-      categoryId: $categoryId
-      type: "short_answer"
+      type: $type
       questionText: $questionText
       imageUrl: $imageUrl
       difficulty: $difficulty
@@ -281,22 +258,22 @@ mutation StartExam($examId: UUID!) @auth(level: USER) {
   )
 }
 
-# 답안 제출 (개별 문제)
-mutation SubmitAnswer(
-  $attemptId: UUID!
-  $questionId: UUID!
-  $selectedChoiceId: UUID
-  $textAnswer: String
-) @auth(level: USER) {
-  studentAnswer_upsert(
-    data: {
-      attemptId: $attemptId
-      questionId: $questionId
-      selectedChoiceId: $selectedChoiceId
-      textAnswer: $textAnswer
-    }
-  )
-}
+# 답안 제출 (개별 문제) - TODO: upsert 대신 insert/update 분리 필요
+# mutation SubmitAnswer(
+#   $attemptId: UUID!
+#   $questionId: UUID!
+#   $selectedChoiceId: UUID
+#   $textAnswer: String
+# ) @auth(level: USER) {
+#   studentAnswer_upsert(
+#     data: {
+#       attemptId: $attemptId
+#       questionId: $questionId
+#       selectedChoiceId: $selectedChoiceId
+#       textAnswer: $textAnswer
+#     }
+#   )
+# }
 
 # 시험 제출 완료
 mutation SubmitExam($attemptId: UUID!) @auth(level: USER) {
@@ -347,20 +324,20 @@ mutation FinalizeExamGrading(
 
 # === 통계 업데이트 뮤테이션 ===
 
-# 문제 통계 업데이트
-mutation UpdateQuestionStatistics(
-  $questionId: UUID!
-  $totalAttempts: Int!
-  $correctAttempts: Int!
-  $averageScore: Float
-) @auth(level: USER) {
-  questionStatistics_upsert(
-    data: {
-      questionId: $questionId
-      totalAttempts: $totalAttempts
-      correctAttempts: $correctAttempts
-      averageScore: $averageScore
-      lastUpdated_expr: "request.time"
-    }
-  )
-}
+# 문제 통계 업데이트 - TODO: 스키마 수정 후 재구현
+# mutation UpdateQuestionStatistics(
+#   $questionId: UUID!
+#   $totalAttempts: Int!
+#   $correctAttempts: Int!
+#   $averageScore: Float
+# ) @auth(level: USER) {
+#   questionStatistics_upsert(
+#     data: {
+#       questionId: $questionId
+#       totalAttempts: $totalAttempts
+#       correctAttempts: $correctAttempts
+#       averageScore: $averageScore
+#       lastUpdated_expr: "request.time"
+#     }
+#   )
+# }

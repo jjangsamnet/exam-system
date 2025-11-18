@@ -7,7 +7,14 @@
       "Bash(git add:*)",
       "Bash(firebase:*)",
       "Bash(npm install:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git -C \"D:\\project\\exam-system\" status)",
+      "Bash(git -C \"D:\\project\\exam-system\" log --oneline -20)",
+      "Bash(git -C \"D:\\project\\exam-system\" remote -v)",
+      "Bash(git -C \"D:\\project\\exam-system\" branch:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

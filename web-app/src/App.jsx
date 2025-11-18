@@ -5,6 +5,7 @@ import { auth, db } from './firebase-config'
 import QuestionForm from './components/QuestionForm'
 import QuestionList from './components/QuestionList'
 import ExamBuilder from './components/ExamBuilder'
+import CategoryManager from './components/CategoryManager'
 import Login from './components/auth/Login'
 import Signup from './components/auth/Signup'
 import './App.css'
@@ -26,6 +27,7 @@ function AppContent() {
   const [showQuestionForm, setShowQuestionForm] = useState(false)
   const [showQuestionList, setShowQuestionList] = useState(false)
   const [showExamBuilder, setShowExamBuilder] = useState(false)
+  const [showCategoryManager, setShowCategoryManager] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
   const [showSignup, setShowSignup] = useState(false)
   const [systemInfo, setSystemInfo] = useState({
@@ -229,6 +231,12 @@ function AppContent() {
           </p>
           <div style={styles.demoButtons}>
             <button
+              style={{...styles.demoButton, background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'}}
+              onClick={() => setShowCategoryManager(true)}
+            >
+              📚 카테고리 관리
+            </button>
+            <button
               style={styles.demoButton}
               onClick={() => setShowQuestionForm(true)}
             >
@@ -270,6 +278,19 @@ function AppContent() {
       {/* Exam Builder Modal */}
       {showExamBuilder && (
         <ExamBuilder onClose={() => setShowExamBuilder(false)} />
+      )}
+
+      {/* Category Manager Modal */}
+      {showCategoryManager && (
+        <div style={styles.modal}>
+          <CategoryManager />
+          <button
+            style={styles.closeModalBtn}
+            onClick={() => setShowCategoryManager(false)}
+          >
+            ✕ 닫기
+          </button>
+        </div>
       )}
 
       {/* Auth Modals */}
@@ -545,6 +566,37 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'all 0.3s ease'
+  },
+  modal: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    zIndex: 1000,
+    padding: '20px',
+    overflowY: 'auto'
+  },
+  closeModalBtn: {
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    padding: '12px 24px',
+    background: '#ef4444',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    fontSize: '16px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+    transition: 'all 0.2s',
+    zIndex: 1001
   }
 }
 
