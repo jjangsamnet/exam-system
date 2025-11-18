@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 
 // Firebase 설정 객체 (환경 변수 사용)
 const firebaseConfig = {
@@ -23,7 +24,19 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
+// Analytics 초기화 (브라우저에서만 지원됨)
+export let analytics = null;
+isSupported().then(yes => {
+  if (yes) {
+    analytics = getAnalytics(app);
+    console.log('📊 Firebase Analytics 초기화 완료');
+  }
+}).catch(err => {
+  console.log('Analytics not supported:', err);
+});
+
 // 한국어 설정
 auth.languageCode = 'ko';
 
+export { app };
 export default app;
