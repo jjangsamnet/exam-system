@@ -12,26 +12,28 @@ For each operation, there is a wrapper hook that can be used to call the operati
 
 Here are all of the hooks that get generated:
 ```ts
-import { useCreateMovie, useUpsertUser, useAddReview, useDeleteReview, useListMovies, useListUsers, useListUserReviews, useGetMovieById, useSearchMovie } from '@dataconnect/generated/react';
+import { useUpsertUser, useCreateCategory, useUpdateCategory, useDeleteCategory, useCreateQuestion, useUpdateQuestion, useDeleteQuestion, useAddChoice, useUpdateChoice, useDeleteChoice } from '@dataconnect/generated/react';
 // The types of these hooks are available in react/index.d.ts
-
-const { data, isPending, isSuccess, isError, error } = useCreateMovie(createMovieVars);
 
 const { data, isPending, isSuccess, isError, error } = useUpsertUser(upsertUserVars);
 
-const { data, isPending, isSuccess, isError, error } = useAddReview(addReviewVars);
+const { data, isPending, isSuccess, isError, error } = useCreateCategory(createCategoryVars);
 
-const { data, isPending, isSuccess, isError, error } = useDeleteReview(deleteReviewVars);
+const { data, isPending, isSuccess, isError, error } = useUpdateCategory(updateCategoryVars);
 
-const { data, isPending, isSuccess, isError, error } = useListMovies();
+const { data, isPending, isSuccess, isError, error } = useDeleteCategory(deleteCategoryVars);
 
-const { data, isPending, isSuccess, isError, error } = useListUsers();
+const { data, isPending, isSuccess, isError, error } = useCreateQuestion(createQuestionVars);
 
-const { data, isPending, isSuccess, isError, error } = useListUserReviews();
+const { data, isPending, isSuccess, isError, error } = useUpdateQuestion(updateQuestionVars);
 
-const { data, isPending, isSuccess, isError, error } = useGetMovieById(getMovieByIdVars);
+const { data, isPending, isSuccess, isError, error } = useDeleteQuestion(deleteQuestionVars);
 
-const { data, isPending, isSuccess, isError, error } = useSearchMovie(searchMovieVars);
+const { data, isPending, isSuccess, isError, error } = useAddChoice(addChoiceVars);
+
+const { data, isPending, isSuccess, isError, error } = useUpdateChoice(updateChoiceVars);
+
+const { data, isPending, isSuccess, isError, error } = useDeleteChoice(deleteChoiceVars);
 
 ```
 
@@ -70,35 +72,38 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { createMovie, upsertUser, addReview, deleteReview, listMovies, listUsers, listUserReviews, getMovieById, searchMovie } from '@dataconnect/generated';
+import { upsertUser, createCategory, updateCategory, deleteCategory, createQuestion, updateQuestion, deleteQuestion, addChoice, updateChoice, deleteChoice } from '@dataconnect/generated';
 
-
-// Operation CreateMovie:  For variables, look at type CreateMovieVars in ../index.d.ts
-const { data } = await CreateMovie(dataConnect, createMovieVars);
 
 // Operation UpsertUser:  For variables, look at type UpsertUserVars in ../index.d.ts
 const { data } = await UpsertUser(dataConnect, upsertUserVars);
 
-// Operation AddReview:  For variables, look at type AddReviewVars in ../index.d.ts
-const { data } = await AddReview(dataConnect, addReviewVars);
+// Operation CreateCategory:  For variables, look at type CreateCategoryVars in ../index.d.ts
+const { data } = await CreateCategory(dataConnect, createCategoryVars);
 
-// Operation DeleteReview:  For variables, look at type DeleteReviewVars in ../index.d.ts
-const { data } = await DeleteReview(dataConnect, deleteReviewVars);
+// Operation UpdateCategory:  For variables, look at type UpdateCategoryVars in ../index.d.ts
+const { data } = await UpdateCategory(dataConnect, updateCategoryVars);
 
-// Operation ListMovies: 
-const { data } = await ListMovies(dataConnect);
+// Operation DeleteCategory:  For variables, look at type DeleteCategoryVars in ../index.d.ts
+const { data } = await DeleteCategory(dataConnect, deleteCategoryVars);
 
-// Operation ListUsers: 
-const { data } = await ListUsers(dataConnect);
+// Operation CreateQuestion:  For variables, look at type CreateQuestionVars in ../index.d.ts
+const { data } = await CreateQuestion(dataConnect, createQuestionVars);
 
-// Operation ListUserReviews: 
-const { data } = await ListUserReviews(dataConnect);
+// Operation UpdateQuestion:  For variables, look at type UpdateQuestionVars in ../index.d.ts
+const { data } = await UpdateQuestion(dataConnect, updateQuestionVars);
 
-// Operation GetMovieById:  For variables, look at type GetMovieByIdVars in ../index.d.ts
-const { data } = await GetMovieById(dataConnect, getMovieByIdVars);
+// Operation DeleteQuestion:  For variables, look at type DeleteQuestionVars in ../index.d.ts
+const { data } = await DeleteQuestion(dataConnect, deleteQuestionVars);
 
-// Operation SearchMovie:  For variables, look at type SearchMovieVars in ../index.d.ts
-const { data } = await SearchMovie(dataConnect, searchMovieVars);
+// Operation AddChoice:  For variables, look at type AddChoiceVars in ../index.d.ts
+const { data } = await AddChoice(dataConnect, addChoiceVars);
+
+// Operation UpdateChoice:  For variables, look at type UpdateChoiceVars in ../index.d.ts
+const { data } = await UpdateChoice(dataConnect, updateChoiceVars);
+
+// Operation DeleteChoice:  For variables, look at type DeleteChoiceVars in ../index.d.ts
+const { data } = await DeleteChoice(dataConnect, deleteChoiceVars);
 
 
 ```

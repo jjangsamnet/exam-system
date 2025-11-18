@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createExam, addQuestionToExam } from '../dataconnect-generated'
 import StepIndicator from './StepIndicator'
 import ExamBasicInfo from './exam/ExamBasicInfo'
 import QuestionSelector from './exam/QuestionSelector'
@@ -162,13 +163,38 @@ const ExamBuilder = ({ onClose }) => {
 
   const handleSubmit = async () => {
     try {
-      // TODO: Firebase Data Connect mutation 호출
-      console.log('시험 생성:', examData)
+      console.log('시험 생성 시작:', examData)
+
+      // 1. 시험 생성
+      const examResult = await createExam({
+        title: examData.title,
+        description: examData.description || null,
+        duration: examData.duration,
+        totalPoints: examData.totalPoints,
+        passingScore: examData.passingScore,
+        startTime: examData.startTime || null,
+        endTime: examData.endTime || null
+      })
+
+      const examId = examResult.data.exam_insert.id
+      console.log('시험 생성 완료, ID:', examId)
+
+      // 2. 시험에 문제 추가
+      for (const item of examData.selectedQuestions) {
+        await addQuestionToExam({
+          examId: examId,
+          questionId: item.questionId,
+          questionOrder: item.order,
+          pointsOverride: item.pointsOverride
+        })
+      }
+      console.log('문제 추가 완료')
+
       alert('시험이 성공적으로 생성되었습니다!')
       onClose && onClose()
     } catch (error) {
       console.error('시험 생성 실패:', error)
-      alert('시험 생성에 실패했습니다.')
+      alert('시험 생성에 실패했습니다: ' + error.message)
     }
   }
 

@@ -1,9 +1,20 @@
 import { useState, useEffect } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { auth, db } from './firebase-config'
 import QuestionForm from './components/QuestionForm'
 import QuestionList from './components/QuestionList'
 import ExamBuilder from './components/ExamBuilder'
 import './App.css'
+
+// QueryClient 인스턴스 생성
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1
+    }
+  }
+})
 
 function App() {
   const [firebaseStatus, setFirebaseStatus] = useState('연결 확인 중...')
@@ -37,7 +48,8 @@ function App() {
   }, [])
 
   return (
-    <div className="App">
+    <QueryClientProvider client={queryClient}>
+      <div className="App">
       <header style={styles.header}>
         <h1 style={styles.title}>📝 문항 출제 관리 시스템</h1>
         <p style={styles.subtitle}>Firebase Data Connect 기반 온라인 시험 플랫폼</p>
@@ -210,7 +222,8 @@ function App() {
       {showExamBuilder && (
         <ExamBuilder onClose={() => setShowExamBuilder(false)} />
       )}
-    </div>
+      </div>
+    </QueryClientProvider>
   )
 }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createQuestion, addChoice, addAnswer } from '../dataconnect-generated'
 import StepIndicator from './StepIndicator'
 import BasicInfoStep from './steps/BasicInfoStep'
 import QuestionContentStep from './steps/QuestionContentStep'
@@ -88,13 +89,51 @@ const QuestionForm = ({ onClose }) => {
 
   const handleSubmit = async () => {
     try {
-      // TODO: Firebase Data Connect mutation 호출
-      console.log('문제 등록:', formData)
+      console.log('문제 등록 시작:', formData)
+
+      // 1. 문제 생성
+      const questionResult = await createQuestion({
+        categoryId: formData.categoryId,
+        type: formData.type,
+        questionText: formData.questionText,
+        imageUrl: formData.imageUrl || null,
+        difficulty: formData.difficulty,
+        points: formData.points
+      })
+
+      const questionId = questionResult.data.question_insert.id
+      console.log('문제 생성 완료, ID:', questionId)
+
+      // 2. 객관식인 경우 선택지 추가
+      if (formData.type === 'multiple_choice') {
+        for (const choice of formData.choices) {
+          if (choice.choiceText.trim()) {
+            await addChoice({
+              questionId: questionId,
+              choiceText: choice.choiceText,
+              choiceNumber: choice.choiceNumber,
+              isCorrect: choice.isCorrect
+            })
+          }
+        }
+        console.log('선택지 추가 완료')
+      }
+
+      // 3. 주관식/서술형인 경우 정답 추가
+      if (formData.type === 'short_answer' || formData.type === 'essay') {
+        await addAnswer({
+          questionId: questionId,
+          answerText: formData.answerText,
+          keywords: formData.keywords || null
+        })
+        console.log('정답 추가 완료')
+      }
+
       alert('문제가 성공적으로 등록되었습니다!')
       onClose && onClose()
     } catch (error) {
       console.error('문제 등록 실패:', error)
-      alert('문제 등록에 실패했습니다.')
+      alert('문제 등록에 실패했습니다: ' + error.message)
     }
   }
 

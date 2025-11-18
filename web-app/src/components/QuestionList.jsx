@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react'
+import { useListQuestions } from '../dataconnect-generated/react'
 import QuestionCard from './QuestionCard'
 import SearchBar from './SearchBar'
 import FilterPanel from './FilterPanel'
 import './QuestionList.css'
 
 const QuestionList = ({ onClose, onEdit }) => {
-  // 샘플 데이터 (실제로는 Firebase에서 가져옴)
+  // Firebase Data Connect에서 문제 목록 가져오기
+  const { data: questionsData, isLoading, error } = useListQuestions()
+
+  // 샘플 데이터 (Firebase 데이터가 없을 때 사용)
   const sampleQuestions = [
     {
       id: 'q1',
@@ -96,6 +100,30 @@ const QuestionList = ({ onClose, onEdit }) => {
   })
   const [sortBy, setSortBy] = useState('latest') // 'latest', 'oldest', 'points'
   const [viewMode, setViewMode] = useState('card') // 'card' or 'table'
+
+  // Firebase에서 가져온 데이터로 업데이트
+  useEffect(() => {
+    if (questionsData?.questions && questionsData.questions.length > 0) {
+      // Firebase 데이터를 UI 형식으로 변환
+      const formattedQuestions = questionsData.questions.map(q => ({
+        id: q.id,
+        type: q.type,
+        categoryId: q.category.id,
+        categoryName: q.category.name,
+        questionText: q.questionText,
+        imageUrl: q.imageUrl,
+        difficulty: q.difficulty,
+        points: q.points,
+        choices: q.choices || [],
+        answerText: q.answers?.[0]?.answerText || '',
+        keywords: q.answers?.[0]?.keywords || '',
+        createdAt: q.createdAt,
+        createdBy: q.createdBy.name
+      }))
+      setQuestions(formattedQuestions)
+      setFilteredQuestions(formattedQuestions)
+    }
+  }, [questionsData])
 
   // 검색 및 필터링 적용
   useEffect(() => {
@@ -225,7 +253,26 @@ const QuestionList = ({ onClose, onEdit }) => {
           </div>
         </div>
 
+        {/* 로딩 상태 */}
+        {isLoading && (
+          <div className="loading-state">
+            <div className="loading-spinner"></div>
+            <p>문제 목록을 불러오는 중...</p>
+          </div>
+        )}
+
+        {/* 에러 상태 */}
+        {error && (
+          <div className="error-state">
+            <div className="error-icon">⚠️</div>
+            <h3>데이터를 불러오지 못했습니다</h3>
+            <p>{error.message}</p>
+            <p className="error-hint">샘플 데이터를 표시합니다.</p>
+          </div>
+        )}
+
         {/* 문제 목록 */}
+        {!isLoading && (
         <div className={`questions-content ${viewMode}`}>
           {filteredQuestions.length === 0 ? (
             <div className="empty-state">
@@ -313,6 +360,7 @@ const QuestionList = ({ onClose, onEdit }) => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   )
