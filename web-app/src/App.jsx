@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { auth, db } from './firebase-config'
 import QuestionForm from './components/QuestionForm'
 import QuestionList from './components/QuestionList'
+import ExamBuilder from './components/ExamBuilder'
 import './App.css'
 
 function App() {
@@ -9,6 +10,7 @@ function App() {
   const [projectId, setProjectId] = useState('')
   const [showQuestionForm, setShowQuestionForm] = useState(false)
   const [showQuestionList, setShowQuestionList] = useState(false)
+  const [showExamBuilder, setShowExamBuilder] = useState(false)
   const [systemInfo, setSystemInfo] = useState({
     schemaVersion: '1.0',
     totalEntities: 10,
@@ -177,6 +179,12 @@ function App() {
             >
               📚 문제 목록 UI
             </button>
+            <button
+              style={{...styles.demoButton, background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'}}
+              onClick={() => setShowExamBuilder(true)}
+            >
+              📋 시험 만들기 UI
+            </button>
           </div>
         </footer>
       </main>
@@ -196,6 +204,11 @@ function App() {
             setShowQuestionForm(true)
           }}
         />
+      )}
+
+      {/* Exam Builder Modal */}
+      {showExamBuilder && (
+        <ExamBuilder onClose={() => setShowExamBuilder(false)} />
       )}
     </div>
   )
