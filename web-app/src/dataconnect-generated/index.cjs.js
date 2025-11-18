@@ -7,6 +7,138 @@ const connectorConfig = {
 };
 exports.connectorConfig = connectorConfig;
 
+const getCurrentUserRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetCurrentUser');
+}
+getCurrentUserRef.operationName = 'GetCurrentUser';
+exports.getCurrentUserRef = getCurrentUserRef;
+
+exports.getCurrentUser = function getCurrentUser(dc) {
+  return executeQuery(getCurrentUserRef(dc));
+};
+
+const listAllUsersRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListAllUsers');
+}
+listAllUsersRef.operationName = 'ListAllUsers';
+exports.listAllUsersRef = listAllUsersRef;
+
+exports.listAllUsers = function listAllUsers(dc) {
+  return executeQuery(listAllUsersRef(dc));
+};
+
+const listCategoriesRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListCategories');
+}
+listCategoriesRef.operationName = 'ListCategories';
+exports.listCategoriesRef = listCategoriesRef;
+
+exports.listCategories = function listCategories(dc) {
+  return executeQuery(listCategoriesRef(dc));
+};
+
+const listQuestionsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListQuestions', inputVars);
+}
+listQuestionsRef.operationName = 'ListQuestions';
+exports.listQuestionsRef = listQuestionsRef;
+
+exports.listQuestions = function listQuestions(dcOrVars, vars) {
+  return executeQuery(listQuestionsRef(dcOrVars, vars));
+};
+
+const getQuestionByIdRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetQuestionById', inputVars);
+}
+getQuestionByIdRef.operationName = 'GetQuestionById';
+exports.getQuestionByIdRef = getQuestionByIdRef;
+
+exports.getQuestionById = function getQuestionById(dcOrVars, vars) {
+  return executeQuery(getQuestionByIdRef(dcOrVars, vars));
+};
+
+const listExamsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListExams', inputVars);
+}
+listExamsRef.operationName = 'ListExams';
+exports.listExamsRef = listExamsRef;
+
+exports.listExams = function listExams(dcOrVars, vars) {
+  return executeQuery(listExamsRef(dcOrVars, vars));
+};
+
+const getExamByIdRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetExamById', inputVars);
+}
+getExamByIdRef.operationName = 'GetExamById';
+exports.getExamByIdRef = getExamByIdRef;
+
+exports.getExamById = function getExamById(dcOrVars, vars) {
+  return executeQuery(getExamByIdRef(dcOrVars, vars));
+};
+
+const listMyExamAttemptsRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListMyExamAttempts');
+}
+listMyExamAttemptsRef.operationName = 'ListMyExamAttempts';
+exports.listMyExamAttemptsRef = listMyExamAttemptsRef;
+
+exports.listMyExamAttempts = function listMyExamAttempts(dc) {
+  return executeQuery(listMyExamAttemptsRef(dc));
+};
+
+const getExamAttemptByIdRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetExamAttemptById', inputVars);
+}
+getExamAttemptByIdRef.operationName = 'GetExamAttemptById';
+exports.getExamAttemptByIdRef = getExamAttemptByIdRef;
+
+exports.getExamAttemptById = function getExamAttemptById(dcOrVars, vars) {
+  return executeQuery(getExamAttemptByIdRef(dcOrVars, vars));
+};
+
+const getExamAttemptsByExamRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetExamAttemptsByExam', inputVars);
+}
+getExamAttemptsByExamRef.operationName = 'GetExamAttemptsByExam';
+exports.getExamAttemptsByExamRef = getExamAttemptsByExamRef;
+
+exports.getExamAttemptsByExam = function getExamAttemptsByExam(dcOrVars, vars) {
+  return executeQuery(getExamAttemptsByExamRef(dcOrVars, vars));
+};
+
+const listAvailableExamsRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListAvailableExams');
+}
+listAvailableExamsRef.operationName = 'ListAvailableExams';
+exports.listAvailableExamsRef = listAvailableExamsRef;
+
+exports.listAvailableExams = function listAvailableExams(dc) {
+  return executeQuery(listAvailableExamsRef(dc));
+};
+
 const upsertUserRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -223,18 +355,6 @@ exports.startExam = function startExam(dcOrVars, vars) {
   return executeMutation(startExamRef(dcOrVars, vars));
 };
 
-const submitAnswerRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'SubmitAnswer', inputVars);
-}
-submitAnswerRef.operationName = 'SubmitAnswer';
-exports.submitAnswerRef = submitAnswerRef;
-
-exports.submitAnswer = function submitAnswer(dcOrVars, vars) {
-  return executeMutation(submitAnswerRef(dcOrVars, vars));
-};
-
 const submitExamRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -269,160 +389,4 @@ exports.finalizeExamGradingRef = finalizeExamGradingRef;
 
 exports.finalizeExamGrading = function finalizeExamGrading(dcOrVars, vars) {
   return executeMutation(finalizeExamGradingRef(dcOrVars, vars));
-};
-
-const updateQuestionStatisticsRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'UpdateQuestionStatistics', inputVars);
-}
-updateQuestionStatisticsRef.operationName = 'UpdateQuestionStatistics';
-exports.updateQuestionStatisticsRef = updateQuestionStatisticsRef;
-
-exports.updateQuestionStatistics = function updateQuestionStatistics(dcOrVars, vars) {
-  return executeMutation(updateQuestionStatisticsRef(dcOrVars, vars));
-};
-
-const getCurrentUserRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetCurrentUser');
-}
-getCurrentUserRef.operationName = 'GetCurrentUser';
-exports.getCurrentUserRef = getCurrentUserRef;
-
-exports.getCurrentUser = function getCurrentUser(dc) {
-  return executeQuery(getCurrentUserRef(dc));
-};
-
-const listAllUsersRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'ListAllUsers');
-}
-listAllUsersRef.operationName = 'ListAllUsers';
-exports.listAllUsersRef = listAllUsersRef;
-
-exports.listAllUsers = function listAllUsers(dc) {
-  return executeQuery(listAllUsersRef(dc));
-};
-
-const listCategoriesRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'ListCategories');
-}
-listCategoriesRef.operationName = 'ListCategories';
-exports.listCategoriesRef = listCategoriesRef;
-
-exports.listCategories = function listCategories(dc) {
-  return executeQuery(listCategoriesRef(dc));
-};
-
-const listQuestionsRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'ListQuestions', inputVars);
-}
-listQuestionsRef.operationName = 'ListQuestions';
-exports.listQuestionsRef = listQuestionsRef;
-
-exports.listQuestions = function listQuestions(dcOrVars, vars) {
-  return executeQuery(listQuestionsRef(dcOrVars, vars));
-};
-
-const getQuestionByIdRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetQuestionById', inputVars);
-}
-getQuestionByIdRef.operationName = 'GetQuestionById';
-exports.getQuestionByIdRef = getQuestionByIdRef;
-
-exports.getQuestionById = function getQuestionById(dcOrVars, vars) {
-  return executeQuery(getQuestionByIdRef(dcOrVars, vars));
-};
-
-const listExamsRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'ListExams', inputVars);
-}
-listExamsRef.operationName = 'ListExams';
-exports.listExamsRef = listExamsRef;
-
-exports.listExams = function listExams(dcOrVars, vars) {
-  return executeQuery(listExamsRef(dcOrVars, vars));
-};
-
-const getExamByIdRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetExamById', inputVars);
-}
-getExamByIdRef.operationName = 'GetExamById';
-exports.getExamByIdRef = getExamByIdRef;
-
-exports.getExamById = function getExamById(dcOrVars, vars) {
-  return executeQuery(getExamByIdRef(dcOrVars, vars));
-};
-
-const listMyExamAttemptsRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'ListMyExamAttempts');
-}
-listMyExamAttemptsRef.operationName = 'ListMyExamAttempts';
-exports.listMyExamAttemptsRef = listMyExamAttemptsRef;
-
-exports.listMyExamAttempts = function listMyExamAttempts(dc) {
-  return executeQuery(listMyExamAttemptsRef(dc));
-};
-
-const getExamAttemptByIdRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetExamAttemptById', inputVars);
-}
-getExamAttemptByIdRef.operationName = 'GetExamAttemptById';
-exports.getExamAttemptByIdRef = getExamAttemptByIdRef;
-
-exports.getExamAttemptById = function getExamAttemptById(dcOrVars, vars) {
-  return executeQuery(getExamAttemptByIdRef(dcOrVars, vars));
-};
-
-const getExamAttemptsByExamRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetExamAttemptsByExam', inputVars);
-}
-getExamAttemptsByExamRef.operationName = 'GetExamAttemptsByExam';
-exports.getExamAttemptsByExamRef = getExamAttemptsByExamRef;
-
-exports.getExamAttemptsByExam = function getExamAttemptsByExam(dcOrVars, vars) {
-  return executeQuery(getExamAttemptsByExamRef(dcOrVars, vars));
-};
-
-const getQuestionStatisticsRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetQuestionStatistics', inputVars);
-}
-getQuestionStatisticsRef.operationName = 'GetQuestionStatistics';
-exports.getQuestionStatisticsRef = getQuestionStatisticsRef;
-
-exports.getQuestionStatistics = function getQuestionStatistics(dcOrVars, vars) {
-  return executeQuery(getQuestionStatisticsRef(dcOrVars, vars));
-};
-
-const listAvailableExamsRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
-  dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'ListAvailableExams');
-}
-listAvailableExamsRef.operationName = 'ListAvailableExams';
-exports.listAvailableExamsRef = listAvailableExamsRef;
-
-exports.listAvailableExams = function listAvailableExams(dc) {
-  return executeQuery(listAvailableExamsRef(dc));
 };
