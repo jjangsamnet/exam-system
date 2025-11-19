@@ -343,39 +343,8 @@
     </div>
 
     <script>
-        // 개발 서버로 자동 리다이렉트
-        async function redirectToApp() {
-            try {
-                // 개발 서버가 실행 중인지 확인
-                await fetch('http://localhost:5173', { mode: 'no-cors' });
-                // 실행 중이면 바로 리다이렉트
-                window.location.href = 'http://localhost:5173';
-            } catch (error) {
-                // 서버가 실행 중이지 않으면 상태 표시
-                const statusElement = document.querySelector('.status');
-                statusElement.textContent = '중지됨';
-                statusElement.style.background = '#f8d7da';
-                statusElement.style.color = '#721c24';
-
-                // 안내 메시지 표시
-                const container = document.querySelector('.container');
-                const alertBox = document.createElement('div');
-                alertBox.style.cssText = 'background: #fff3cd; border: 2px solid #ffc107; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;';
-                alertBox.innerHTML = `
-                    <h3 style="color: #856404; margin-bottom: 10px;">⚠️ 개발 서버가 실행되지 않았습니다</h3>
-                    <p style="color: #856404;">터미널에서 다음 명령어를 실행해주세요:</p>
-                    <pre style="background: white; padding: 15px; border-radius: 5px; margin: 15px 0; text-align: left; overflow-x: auto;">
-cd web-app
-npm install
-npm run dev</pre>
-                    <p style="color: #856404; margin-top: 15px;">서버 실행 후 이 페이지를 새로고침하세요.</p>
-                `;
-                container.insertBefore(alertBox, document.querySelector('.button-group'));
-            }
-        }
-
-        // 페이지 로드 시 자동 리다이렉트 시도
-        redirectToApp();
+        // 배포된 사이트로 자동 리다이렉트
+        window.location.href = 'https://exam-system-28765.web.app';
     </script>
 </body>
 </html>
