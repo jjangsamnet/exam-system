@@ -55,6 +55,13 @@ function AppContent() {
     }
   }, [])
 
+  // 로그인되지 않은 사용자는 자동으로 로그인 모달 표시
+  useEffect(() => {
+    if (currentUser === null) {
+      setShowLogin(true)
+    }
+  }, [currentUser])
+
   const handleLogout = async () => {
     try {
       await logout()
