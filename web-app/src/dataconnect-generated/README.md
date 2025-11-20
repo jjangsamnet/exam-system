@@ -131,6 +131,8 @@ export interface GetCurrentUserData {
     email: string;
     name: string;
     role: string;
+    schoolName?: string | null;
+    approvalStatus?: string | null;
     createdAt: TimestampString;
   } & User_Key;
 }

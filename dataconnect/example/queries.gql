@@ -9,6 +9,8 @@ query GetCurrentUser @auth(level: USER) {
     email
     name
     role
+    schoolName
+    approvalStatus
     createdAt
   }
 }

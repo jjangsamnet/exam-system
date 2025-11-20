@@ -8,7 +8,7 @@ import {
   onAuthStateChanged
 } from 'firebase/auth'
 import { auth } from '../firebase-config'
-import { upsertUser } from '../dataconnect-generated'
+import { upsertUser, getCurrentUser } from '../dataconnect-generated'
 
 const AuthContext = createContext({})
 
@@ -98,12 +98,32 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(user)
 
       if (user) {
-        // 로그인된 경우 - 기존 사용자의 role을 덮어쓰지 않도록 프로필 동기화 하지 않음
-        // 회원가입 시에만 syncUserProfile이 호출되어 초기 프로필 생성
-        setUserProfile({
-          email: user.email,
-          name: user.displayName || user.email.split('@')[0]
-        })
+        // 로그인된 경우 - 데이터베이스에서 사용자 정보 가져오기
+        try {
+          const result = await getCurrentUser()
+          if (result.data.user) {
+            setUserProfile({
+              email: result.data.user.email,
+              name: result.data.user.name,
+              role: result.data.user.role,
+              schoolName: result.data.user.schoolName,
+              approvalStatus: result.data.user.approvalStatus
+            })
+          } else {
+            // 데이터베이스에 사용자 정보가 없는 경우 (새 사용자)
+            setUserProfile({
+              email: user.email,
+              name: user.displayName || user.email.split('@')[0]
+            })
+          }
+        } catch (error) {
+          console.error('사용자 프로필 로드 실패:', error)
+          // 오류 발생 시 기본 정보만 설정
+          setUserProfile({
+            email: user.email,
+            name: user.displayName || user.email.split('@')[0]
+          })
+        }
       } else {
         setUserProfile(null)
       }
