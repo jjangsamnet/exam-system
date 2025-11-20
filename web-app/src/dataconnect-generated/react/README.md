@@ -1216,6 +1216,7 @@ export interface UpsertUserVariables {
   name: string;
   role: string;
   schoolName?: string | null;
+  approvalStatus?: string | null;
 }
 ```
 ### Return Type
@@ -1269,10 +1270,11 @@ export default function UpsertUserComponent() {
     name: ..., 
     role: ..., 
     schoolName: ..., // optional
+    approvalStatus: ..., // optional
   };
   mutation.mutate(upsertUserVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ email: ..., name: ..., role: ..., schoolName: ..., });
+  mutation.mutate({ email: ..., name: ..., role: ..., schoolName: ..., approvalStatus: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {

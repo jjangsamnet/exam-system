@@ -518,6 +518,7 @@ export interface UpsertUserVariables {
   name: string;
   role: string;
   schoolName?: string | null;
+  approvalStatus?: string | null;
 }
 
 export interface User_Key {

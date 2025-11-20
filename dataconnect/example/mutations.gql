@@ -3,7 +3,7 @@
 # === 사용자 관리 뮤테이션 ===
 
 # 사용자 등록/업데이트 (Firebase Auth 연동)
-mutation UpsertUser($email: String!, $name: String!, $role: String!, $schoolName: String) @auth(level: USER) {
+mutation UpsertUser($email: String!, $name: String!, $role: String!, $schoolName: String, $approvalStatus: String) @auth(level: USER) {
   user_upsert(
     data: {
       id_expr: "auth.uid"
@@ -11,6 +11,7 @@ mutation UpsertUser($email: String!, $name: String!, $role: String!, $schoolName
       name: $name
       role: $role
       schoolName: $schoolName
+      approvalStatus: $approvalStatus
     }
   )
 }

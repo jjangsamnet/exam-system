@@ -28,11 +28,13 @@ export const AuthProvider = ({ children }) => {
   // 사용자 프로필을 Data Connect에 저장/업데이트
   const syncUserProfile = async (user, additionalData = {}) => {
     try {
+      const role = additionalData.role || 'student' // 기본값: student
       const userData = {
         email: user.email,
         name: additionalData.name || user.displayName || user.email.split('@')[0],
-        role: additionalData.role || 'student', // 기본값: student
-        schoolName: additionalData.schoolName || null // 학교명 (학생만 사용)
+        role: role,
+        schoolName: additionalData.schoolName || null,
+        approvalStatus: additionalData.approvalStatus || (role === 'student' ? 'approved' : 'pending')
       }
 
       await upsertUser(userData)
