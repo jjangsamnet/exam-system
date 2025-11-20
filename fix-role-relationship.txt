@@ -1,0 +1,113 @@
+================================================================================
+역할 관계 수정 - cloudsqlsuperuser와 firebaseowner_fdcdb_public
+================================================================================
+
+현재 상황 분석:
+✗ cloudsqlsuperuser → firebaseowner_fdcdb_public (역방향, 잘못됨)
+✓ firebaseowner_fdcdb_public → cloudsqlsuperuser (정방향, 필요함)
+
+Firebase CLI 오류:
+"Role 'cloudsqlsuperuser', is not granted to role 'firebaseowner_fdcdb_public'"
+
+해결 방법: 역방향 관계를 제거하고 정방향 관계를 생성
+
+================================================================================
+실행 단계 (fdcdb=> 프롬프트에서 실행)
+================================================================================
+
+1단계: 역방향 관계 제거
+--------------------------------------------------------------------------------
+
+REVOKE firebaseowner_fdcdb_public FROM cloudsqlsuperuser;
+
+예상 결과:
+REVOKE ROLE
+
+--------------------------------------------------------------------------------
+
+2단계: 정방향 관계 생성
+--------------------------------------------------------------------------------
+
+GRANT cloudsqlsuperuser TO firebaseowner_fdcdb_public;
+
+예상 결과:
+GRANT ROLE
+
+--------------------------------------------------------------------------------
+
+3단계: 관계 확인
+--------------------------------------------------------------------------------
+
+SELECT r.rolname AS role_name, m.rolname AS member_of
+FROM pg_roles r
+LEFT JOIN pg_auth_members am ON r.oid = am.member
+LEFT JOIN pg_roles m ON am.roleid = m.oid
+WHERE r.rolname = 'firebaseowner_fdcdb_public';
+
+예상 결과:
+         role_name          |     member_of
+----------------------------+-------------------
+ firebaseowner_fdcdb_public | cloudsqlsuperuser
+(1 row)
+
+이제 member_of 컬럼에 "cloudsqlsuperuser"가 표시되어야 합니다.
+
+--------------------------------------------------------------------------------
+
+4단계: cloudsqlsuperuser 관계도 확인
+--------------------------------------------------------------------------------
+
+SELECT r.rolname AS role_name, m.rolname AS member_of
+FROM pg_roles r
+LEFT JOIN pg_auth_members am ON r.oid = am.member
+LEFT JOIN pg_roles m ON am.roleid = m.oid
+WHERE r.rolname = 'cloudsqlsuperuser';
+
+예상 결과:
+     role_name     |          member_of
+-------------------+-----------------------------
+ cloudsqlsuperuser | pg_monitor
+ cloudsqlsuperuser | pg_signal_backend
+ cloudsqlsuperuser | pg_checkpoint
+ cloudsqlsuperuser | firebasereader_fdcdb_public
+ cloudsqlsuperuser | firebasewriter_fdcdb_public
+(5 rows)
+
+firebaseowner_fdcdb_public이 목록에서 사라져야 합니다.
+
+================================================================================
+전체 SQL (한번에 실행)
+================================================================================
+
+-- 역방향 관계 제거
+REVOKE firebaseowner_fdcdb_public FROM cloudsqlsuperuser;
+
+-- 정방향 관계 생성
+GRANT cloudsqlsuperuser TO firebaseowner_fdcdb_public;
+
+-- 확인
+SELECT r.rolname AS role_name, m.rolname AS member_of
+FROM pg_roles r
+LEFT JOIN pg_auth_members am ON r.oid = am.member
+LEFT JOIN pg_roles m ON am.roleid = m.oid
+WHERE r.rolname = 'firebaseowner_fdcdb_public';
+
+SELECT '✓ Role relationship fixed successfully!' AS status;
+
+================================================================================
+다음: user 테이블에 컬럼 추가
+================================================================================
+
+위 단계가 완료되면 user 테이블에 필요한 컬럼을 추가하세요:
+
+ALTER TABLE "public"."user"
+ADD COLUMN IF NOT EXISTS "approval_status" character varying(20) NULL,
+ADD COLUMN IF NOT EXISTS "school_name" character varying(200) NULL;
+
+-- 확인
+SELECT column_name, data_type, character_maximum_length, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'user'
+ORDER BY ordinal_position;
+
+================================================================================

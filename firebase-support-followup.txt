@@ -1,0 +1,187 @@
+Subject: Follow-up: Database Migration Failure - Detailed Debug Information
+
+---
+
+Hello Firebase Support Team,
+
+Thank you for your previous guidance. I have attempted all the suggested solutions, but the migration still fails. Below is a detailed report of what was attempted and the results.
+
+PROJECT DETAILS:
+- Project ID: exam-system-28765
+- Service ID: exam-system
+- Cloud SQL Instance: exam-system-fdc
+- Database: fdcdb
+- Region: us-east4
+- My IP Address: 210.107.8.68
+
+---
+
+ATTEMPTS MADE (Following Your Guidance):
+
+1. IAM PERMISSIONS VERIFICATION ✓
+   - Verified kd12345@gmail.com has the following roles:
+     ✓ Owner (roles/owner)
+     ✓ Cloud SQL Admin (roles/cloudsql.admin)
+     ✓ Firebase Admin (roles/firebase.admin)
+   - All required permissions are in place
+
+2. NETWORK CONFIGURATION ✓
+   - Added my IP address (210.107.8.68/32) to Cloud SQL authorized networks
+   - Configuration saved successfully
+
+3. FIREBASE DATACONNECT:SQL:SETUP COMMAND
+   Command: firebase dataconnect:sql:setup
+
+   Result: FAILED
+   Error: "An unexpected error has occurred"
+
+   Debug Log Extract:
+   ```
+   [2025-11-20T04:11:06.239Z] >
+       DO $$
+       DECLARE
+           role_count INTEGER;
+       BEGIN
+           SELECT COUNT(*)
+           INTO role_count
+           FROM pg_auth_members m
+           JOIN pg_roles grantee ON grantee.oid = m.member
+           JOIN pg_roles granted ON granted.oid = m.roleid
+           JOIN pg_roles grantor ON grantor.oid = m.grantor
+           WHERE
+             granted.rolname = 'cloudsqlsuperuser'
+             AND grantee.rolname = 'firebaseowner_fdcdb_public';
+
+           IF role_count = 0 THEN
+               RAISE EXCEPTION 'Role "%", is not granted to role "%".',
+                   'cloudsqlsuperuser', 'firebaseowner_fdcdb_public';
+           END IF;
+       END $$;
+
+   [2025-11-20T04:11:06.469Z] Rolling back transaction due to error
+   error: Role "cloudsqlsuperuser", is not granted to role "firebaseowner_fdcdb_public".
+
+   [2025-11-20T04:11:12.366Z] Error: Connection terminated due to connection timeout
+   ```
+
+   Analysis:
+   - The command successfully connects to Cloud SQL
+   - It detects that role "firebaseowner_fdcdb_public" lacks "cloudsqlsuperuser" role
+   - It attempts to create "firebasesuperuser" user
+   - Connection timeout occurs when trying to execute SQL commands
+
+4. FIREBASE DATACONNECT:SQL:MIGRATE --FORCE
+   Command: firebase dataconnect:sql:migrate --force
+
+   Result: FAILED
+   Error: "An unexpected error has occurred"
+   Error occurs at: "Granting firebaseowner role to myself kd12345@gmail.com..."
+
+5. FIREBASE DEPLOY --ONLY DATACONNECT
+   Command: firebase deploy --only dataconnect
+
+   Result: FAILED
+   Error: "Command aborted. Your database schema is incompatible with your Data Connect schema"
+   Message: "Run `firebase dataconnect:sql:migrate` to migrate your database schema"
+
+---
+
+ROOT CAUSE IDENTIFIED:
+
+Based on debug logs, the issue is:
+
+1. Firebase CLI successfully authenticates and connects to Cloud SQL
+2. It detects missing PostgreSQL role permissions:
+   - Role "firebaseowner_fdcdb_public" needs "cloudsqlsuperuser" grant
+3. Firebase CLI attempts to create/modify database users and roles
+4. **Connection timeout occurs** during SQL command execution
+5. This prevents the migration from completing
+
+The connection timeout suggests:
+- Network latency issues between my local machine and Cloud SQL (us-east4)
+- Possible firewall/proxy interference
+- Cloud SQL connection pool exhaustion
+
+---
+
+REQUIRED MIGRATION SQL:
+
+The following SQL needs to be executed on the database:
+
+```sql
+ALTER TABLE "public"."user"
+ADD COLUMN "approval_status" character varying(20) NULL,
+ADD COLUMN "school_name" character varying(200) NULL;
+```
+
+---
+
+CURRENT WORKAROUND:
+
+I have implemented a temporary solution:
+- Modified the application to NOT send schoolName parameter to the database
+- The application stores schoolName only in client-side state
+- The system is currently deployed and functional at: https://exam-system-28765.web.app
+- Users can log in and use the system normally
+
+This workaround allows the system to operate, but the following features are unavailable:
+- Storing student school names in the database
+- Teacher/admin approval system (requires approval_status field)
+
+---
+
+REQUEST FOR ASSISTANCE:
+
+Could the Firebase team help with one of the following options?
+
+Option 1: Server-side Migration
+- Execute the ALTER TABLE statement directly on the Cloud SQL instance
+- Grant the necessary role permissions to "firebaseowner_fdcdb_public"
+
+Option 2: Connection Timeout Investigation
+- Investigate why connection timeouts occur during migration
+- Suggest alternative connection methods (Cloud SQL Proxy, etc.)
+- Provide guidance on increasing timeout limits
+
+Option 3: Alternative Migration Method
+- Provide steps to perform manual migration through Firebase Console
+- Documentation on managing Data Connect schema migrations for existing databases
+
+---
+
+TECHNICAL ENVIRONMENT:
+
+- OS: Windows
+- Firebase CLI Version: Latest (installed via npm)
+- Node.js: Latest LTS
+- Network: Corporate network with firewall
+- Location: South Korea
+- Target Region: us-east4 (USA)
+
+---
+
+ADDITIONAL INFORMATION:
+
+Firebase CLI Debug Log (full output available upon request):
+- Authentication: SUCCESS
+- API calls: SUCCESS
+- Cloud SQL connection: SUCCESS
+- Ephemeral certificate generation: SUCCESS
+- SQL command execution: TIMEOUT after ~10 seconds
+
+Cloud SQL Instance Settings:
+- Database Version: POSTGRES_15
+- Tier: db-f1-micro
+- Public IP: 35.245.133.94
+- IAM Authentication: Enabled
+- SSL Mode: ALLOW_UNENCRYPTED_AND_ENCRYPTED
+
+---
+
+URGENCY:
+
+Medium - The system is currently functional with the workaround, but we need the approval system and school name features for production use.
+
+Thank you for your continued support. Please let me know if you need any additional information or log files.
+
+Best regards

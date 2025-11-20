@@ -1,0 +1,166 @@
+================================================================================
+user 테이블 컬럼 추가 - 최종 해결 방법
+================================================================================
+
+현재 상황:
+- postgres 사용자로는 테이블 소유자 변경 불가
+- 테이블 소유자: firebaseowner_fdcdb_public
+- postgres는 superuser가 아님 (Cloud SQL 정책)
+
+================================================================================
+방법 1: firebasesuperuser로 재연결 (권장)
+================================================================================
+
+firebasesuperuser는 cloudsqlsuperuser 그룹의 멤버이므로 더 많은 권한을 가집니다.
+
+1단계: 현재 연결 종료
+----------------------
+
+\q
+
+2단계: firebasesuperuser로 재연결
+---------------------------------
+
+gcloud sql connect exam-system-fdc --user=firebasesuperuser --database=fdcdb
+
+비밀번호가 없다면:
+- Cloud SQL 콘솔 (https://console.cloud.google.com/sql/instances/exam-system-fdc/users?project=exam-system-28765)
+- firebasesuperuser 찾기 → 점 3개 메뉴 → "비밀번호 변경"
+- 새 비밀번호 설정 (예: TempPass123!)
+- 다시 위 명령 실행
+
+3단계: 연결 후 컬럼 추가
+------------------------
+
+ALTER TABLE "public"."user"
+ADD COLUMN IF NOT EXISTS "approval_status" character varying(20) NULL,
+ADD COLUMN IF NOT EXISTS "school_name" character varying(200) NULL;
+
+4단계: 확인
+-----------
+
+SELECT column_name, data_type, character_maximum_length, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'user'
+ORDER BY ordinal_position;
+
+================================================================================
+방법 2: Cloud SQL 웹 콘솔에서 직접 실행 (가장 간단)
+================================================================================
+
+비밀번호 문제를 피하는 가장 쉬운 방법입니다.
+
+1단계: SQL 작업 공간 열기
+--------------------------
+
+다음 URL로 이동:
+https://console.cloud.google.com/sql/instances/exam-system-fdc/overview?project=exam-system-28765
+
+2단계: 쿼리 실행 화면 찾기
+--------------------------
+
+방법 A:
+- 좌측 메뉴 "개요" 페이지에서
+- "이 인스턴스에 연결" 섹션
+- "Cloud Shell에서 열기" 옆에 있는 다른 옵션들 확인
+
+방법 B:
+- 좌측 메뉴 "데이터베이스" 클릭
+- "fdcdb" 찾기 → 클릭
+- 상단에 "쿼리" 또는 "SQL 작업 공간" 버튼
+
+방법 C:
+- Google Cloud Console 검색창에 "Cloud SQL Studio" 검색
+- exam-system-fdc / fdcdb 선택
+
+3단계: SQL 실행
+---------------
+
+SQL 편집기가 열리면 다음 SQL 붙여넣기 후 실행:
+
+-- 데이터베이스 선택 (필요시)
+\c fdcdb
+
+-- 컬럼 추가
+ALTER TABLE "public"."user"
+ADD COLUMN IF NOT EXISTS "approval_status" character varying(20) NULL,
+ADD COLUMN IF NOT EXISTS "school_name" character varying(200) NULL;
+
+-- 확인
+SELECT column_name, data_type, character_maximum_length, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'user'
+ORDER BY ordinal_position;
+
+================================================================================
+방법 3: Firebase 지원팀에 직접 실행 요청
+================================================================================
+
+위 방법들이 모두 어렵다면, Firebase 지원팀에 다음을 요청하세요:
+
+제목: 데이터베이스 마이그레이션 완료 요청
+
+내용:
+"""
+안녕하세요,
+
+이전 요청(티켓 번호: _____)의 후속 조치입니다.
+
+firebaseowner_fdcdb_public 역할에 cloudsqlsuperuser 권한 부여는 완료되었습니다.
+
+이제 다음 SQL을 exam-system-fdc 인스턴스의 fdcdb 데이터베이스에서
+실행해주시면 감사하겠습니다:
+
+ALTER TABLE "public"."user"
+ADD COLUMN IF NOT EXISTS "approval_status" character varying(20) NULL,
+ADD COLUMN IF NOT EXISTS "school_name" character varying(200) NULL;
+
+감사합니다.
+"""
+
+================================================================================
+권장 순서
+================================================================================
+
+1순위: 방법 2 (Cloud SQL 웹 콘솔) - 비밀번호 불필요, 가장 간단
+2순위: 방법 1 (firebasesuperuser 재연결) - 더 많은 권한
+3순위: 방법 3 (Firebase 지원팀 요청) - 확실하지만 시간 소요
+
+================================================================================
+완료 후 확인
+================================================================================
+
+컬럼 추가가 완료되면 다음 결과가 표시되어야 합니다:
+
+ column_name     |        data_type         | character_maximum_length | is_nullable
+-----------------+--------------------------+--------------------------+-------------
+ id              | text                     |                          | NO
+ created_at      | timestamp with time zone |                          | NO
+ email           | text                     |                          | NO
+ name            | character varying        |                      100 | NO
+ role            | character varying        |                       20 | NO
+ approval_status | character varying        |                       20 | YES
+ school_name     | character varying        |                      200 | YES
+(7 rows)
+
+approval_status와 school_name이 추가되어 총 7개 컬럼
+
+================================================================================
+다음 단계: 애플리케이션 배포
+================================================================================
+
+데이터베이스 마이그레이션이 완료되면:
+
+1. 로컬에서 Firebase Data Connect 동기화:
+   firebase dataconnect:sql:migrate --force
+
+2. Firebase Data Connect 배포:
+   firebase deploy --only dataconnect
+
+3. 애플리케이션 코드 수정 (AuthContext.jsx 등)
+   - schoolName, approvalStatus 파라미터 활성화
+
+4. 전체 배포:
+   firebase deploy
+
+================================================================================

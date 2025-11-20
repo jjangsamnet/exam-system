@@ -1,0 +1,50 @@
+제목: 데이터베이스 마이그레이션 실패 - Firebase Data Connect 권한 오류
+
+---
+
+안녕하세요, Firebase 지원팀
+
+Firebase Data Connect의 Cloud SQL 데이터베이스 스키마 마이그레이션 중 오류가 발생하여 문의드립니다.
+
+프로젝트 정보:
+- 프로젝트 ID: exam-system-28765
+- 서비스 ID: exam-system
+- Cloud SQL 인스턴스: exam-system-fdc
+- 데이터베이스: fdcdb
+- 리전: us-east4
+
+문제 상황:
+데이터베이스 마이그레이션 명령어 실행 시 권한 오류가 발생합니다.
+
+실행한 명령어:
+  firebase dataconnect:sql:migrate --force
+
+오류 메시지:
+  "Error: An unexpected error has occurred."
+
+오류 발생 단계:
+  "Granting firebaseowner role to myself kd12345@gmail.com..."
+
+필요한 마이그레이션:
+Data Connect 스키마와 호환되도록 다음 SQL을 실행해야 합니다:
+
+  ALTER TABLE "public"."user"
+  ADD COLUMN "approval_status" character varying(20) NULL,
+  ADD COLUMN "school_name" character varying(200) NULL;
+
+시도한 방법:
+1. firebase dataconnect:sql:migrate - 권한 오류 발생
+2. firebase dataconnect:sql:migrate --force - 동일한 오류 발생
+3. firebase deploy --only dataconnect - 연결 타임아웃
+4. Cloud SQL Studio에서 직접 SQL 실행 - "must be owner of table user" 오류
+
+질문:
+데이터베이스 스키마를 올바르게 마이그레이션하려면 어떻게 해야 하나요?
+제 계정에 추가 IAM 권한이 필요한가요, 아니면 다른 방법이 있나요?
+
+추가 정보:
+- Firebase CLI 버전: (최신)
+- 애플리케이션은 이미 배포되어 실행 중입니다
+- 사용자 승인 시스템 및 학교명 기능 구현에 필요한 마이그레이션입니다
+
+도움 주셔서 감사합니다.

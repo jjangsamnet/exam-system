@@ -1,0 +1,171 @@
+================================================================================
+user 테이블에 컬럼 추가 - 소유자 권한 문제 해결
+================================================================================
+
+오류:
+ERROR: must be owner of table user
+
+의미:
+postgres 사용자가 user 테이블의 소유자가 아님
+
+================================================================================
+1단계: user 테이블의 소유자 확인
+================================================================================
+
+SELECT
+    schemaname,
+    tablename,
+    tableowner
+FROM pg_tables
+WHERE schemaname = 'public' AND tablename = 'user';
+
+예상 결과:
+schemaname | tablename |         tableowner
+-----------+-----------+-----------------------------
+public     | user      | firebaseowner_fdcdb_public
+(1 row)
+
+또는 더 상세한 정보:
+
+SELECT
+    t.schemaname,
+    t.tablename,
+    t.tableowner,
+    r.rolsuper AS owner_is_superuser
+FROM pg_tables t
+JOIN pg_roles r ON t.tableowner = r.rolname
+WHERE t.schemaname = 'public' AND t.tablename = 'user';
+
+================================================================================
+2단계: postgres가 superuser 권한이 있는지 확인
+================================================================================
+
+SELECT rolname, rolsuper, rolcreaterole, rolcreatedb
+FROM pg_roles
+WHERE rolname = 'postgres';
+
+예상 결과:
+ rolname  | rolsuper | rolcreaterole | rolcreatedb
+----------+----------+---------------+-------------
+ postgres | t        | t             | t
+(1 row)
+
+rolsuper가 't'이면 superuser입니다.
+
+================================================================================
+3단계: 해결 방법 A - postgres 사용자로 강제 실행
+================================================================================
+
+postgres가 superuser라면 다음 방법으로 실행 가능:
+
+방법 1: 테이블 소유자로 전환하여 실행
+--------------------------------------
+
+SET ROLE firebaseowner_fdcdb_public;
+
+ALTER TABLE "public"."user"
+ADD COLUMN IF NOT EXISTS "approval_status" character varying(20) NULL,
+ADD COLUMN IF NOT EXISTS "school_name" character varying(200) NULL;
+
+RESET ROLE;
+
+방법 2: 소유자 변경 후 실행
+----------------------------
+
+-- 임시로 postgres를 소유자로 변경
+ALTER TABLE "public"."user" OWNER TO postgres;
+
+-- 컬럼 추가
+ALTER TABLE "public"."user"
+ADD COLUMN IF NOT EXISTS "approval_status" character varying(20) NULL,
+ADD COLUMN IF NOT EXISTS "school_name" character varying(200) NULL;
+
+-- 소유자를 다시 원래대로 복원
+ALTER TABLE "public"."user" OWNER TO firebaseowner_fdcdb_public;
+
+================================================================================
+4단계: 해결 방법 B - firebasesuperuser로 재연결
+================================================================================
+
+현재 연결 종료:
+
+\q
+
+새로운 연결 (firebasesuperuser 사용):
+
+gcloud sql connect exam-system-fdc --user=firebasesuperuser --database=fdcdb
+
+또는
+
+gcloud sql connect exam-system-fdc --user=postgres --database=fdcdb
+
+연결 후 컬럼 추가:
+
+ALTER TABLE "public"."user"
+ADD COLUMN IF NOT EXISTS "approval_status" character varying(20) NULL,
+ADD COLUMN IF NOT EXISTS "school_name" character varying(200) NULL;
+
+================================================================================
+5단계: 권장 실행 방법 (가장 안전)
+================================================================================
+
+방법 1의 첫 번째 옵션 (SET ROLE)을 사용하세요:
+
+-- 1. 역할 전환
+SET ROLE firebaseowner_fdcdb_public;
+
+-- 2. 컬럼 추가
+ALTER TABLE "public"."user"
+ADD COLUMN IF NOT EXISTS "approval_status" character varying(20) NULL,
+ADD COLUMN IF NOT EXISTS "school_name" character varying(200) NULL;
+
+-- 3. 역할 복원
+RESET ROLE;
+
+-- 4. 확인
+SELECT column_name, data_type, character_maximum_length, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'user'
+ORDER BY ordinal_position;
+
+예상 결과:
+ column_name     |        data_type         | character_maximum_length | is_nullable
+-----------------+--------------------------+--------------------------+-------------
+ id              | text                     |                          | NO
+ created_at      | timestamp with time zone |                          | NO
+ email           | text                     |                          | NO
+ name            | character varying        |                      100 | NO
+ role            | character varying        |                       20 | NO
+ approval_status | character varying        |                       20 | YES
+ school_name     | character varying        |                      200 | YES
+(7 rows)
+
+================================================================================
+전체 SQL (한번에 실행)
+================================================================================
+
+-- 테이블 소유자 확인
+SELECT schemaname, tablename, tableowner
+FROM pg_tables
+WHERE schemaname = 'public' AND tablename = 'user';
+
+-- 역할 전환
+SET ROLE firebaseowner_fdcdb_public;
+
+-- 컬럼 추가
+ALTER TABLE "public"."user"
+ADD COLUMN IF NOT EXISTS "approval_status" character varying(20) NULL,
+ADD COLUMN IF NOT EXISTS "school_name" character varying(200) NULL;
+
+-- 역할 복원
+RESET ROLE;
+
+-- 최종 확인
+SELECT column_name, data_type, character_maximum_length, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'user'
+ORDER BY ordinal_position;
+
+SELECT '✓ Database migration completed successfully!' AS status;
+
+================================================================================

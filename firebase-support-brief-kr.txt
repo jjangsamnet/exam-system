@@ -1,0 +1,86 @@
+제목: 데이터베이스 마이그레이션 실패 - 연결 타임아웃
+
+프로젝트 ID: exam-system-28765
+Cloud SQL 인스턴스: exam-system-fdc
+데이터베이스: fdcdb
+리전: us-east4
+
+---
+
+문제 요약:
+
+연결 타임아웃으로 인해 데이터베이스 스키마 마이그레이션이 불가능합니다. "user" 테이블에 2개의 컬럼을 추가해야 하지만 모든 마이그레이션 시도가 실패합니다.
+
+필요한 SQL:
+```sql
+ALTER TABLE "public"."user"
+ADD COLUMN "approval_status" character varying(20) NULL,
+ADD COLUMN "school_name" character varying(200) NULL;
+```
+
+---
+
+시도한 방법:
+
+1. IAM 권한 확인 ✓
+   - 계정 역할 확인: 소유자, Cloud SQL 관리자, Firebase 관리자
+   - 필요한 모든 권한 보유
+
+2. 네트워크 구성 ✓
+   - Cloud SQL 승인된 네트워크에 IP 주소 (210.107.8.68/32) 추가 완료
+
+3. 마이그레이션 명령 ✗
+   - firebase dataconnect:sql:setup → 연결 타임아웃
+   - firebase dataconnect:sql:migrate --force → 연결 타임아웃
+   - firebase deploy --only dataconnect → 스키마 불일치 오류
+
+---
+
+오류 상세:
+
+명령어: firebase dataconnect:sql:setup --debug
+
+디버그 로그의 핵심 오류:
+```
+Role "cloudsqlsuperuser", is not granted to role "firebaseowner_fdcdb_public"
+Error: Connection terminated due to connection timeout (약 10초 후)
+```
+
+CLI가 성공하는 단계:
+- Cloud SQL 인증
+- 임시 인증서 생성
+- 역할 권한 누락 감지
+
+권한 부여를 위한 SQL 명령 실행 시 실패
+
+---
+
+현재 임시 해결책:
+
+애플리케이션 코드를 수정하여 schoolName/approvalStatus 파라미터를 데이터베이스로 전송하지 않도록 변경. 시스템은 https://exam-system-28765.web.app 에 배포되어 정상 작동 중이나, 다음 기능은 사용 불가:
+- 학생 학교명 저장
+- 교사/관리자 승인 시스템
+
+---
+
+요청 사항:
+
+Firebase 팀에서 다음 중 하나로 도움을 주실 수 있을까요?
+
+1. Cloud SQL 인스턴스에서 직접 ALTER TABLE 문 실행
+2. "firebaseowner_fdcdb_public" 역할에 "cloudsqlsuperuser" 권한 부여
+3. 현재 위치(대한민국 → us-east4)에서 연결 타임아웃이 발생하는 원인 조사
+
+---
+
+환경 정보:
+
+- 위치: 대한민국
+- 네트워크: 기업 방화벽 환경
+- OS: Windows
+- Firebase CLI: 최신 버전
+- Cloud SQL 설정: IAM 인증 활성화, 공개 IP (35.245.133.94)
+
+긴급도: 중간 - 임시 해결책으로 시스템은 작동 중이나 전체 기능이 필요합니다.
+
+감사합니다.

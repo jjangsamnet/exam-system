@@ -1,0 +1,100 @@
+================================================================================
+Cloud SQL 웹 콘솔에서 직접 SQL 실행하기 (패스워드 불필요)
+================================================================================
+
+패스워드 문제 없이 가장 쉽게 SQL을 실행하는 방법입니다.
+
+================================================================================
+방법 1: Cloud SQL Studio 사용 (권장)
+================================================================================
+
+1. 다음 URL로 이동:
+   https://console.cloud.google.com/sql/instances/exam-system-fdc/databases?project=exam-system-28765
+
+2. 왼쪽 메뉴에서 "데이터베이스" 클릭
+
+3. "fdcdb" 데이터베이스를 찾아서 클릭
+
+4. 상단의 "SQL 작업 공간" 또는 "쿼리" 버튼 클릭
+
+5. SQL 편집기가 열리면 아래 쿼리들을 실행
+
+================================================================================
+방법 2: Cloud Shell에서 IAM 인증으로 연결
+================================================================================
+
+1. Cloud Shell 열기 (화면 우측 상단 >_ 아이콘)
+
+2. 다음 명령어 실행 (--enable-iam-login 플래그 추가):
+
+gcloud sql connect exam-system-fdc --user=kd12345@gmail.com --database=fdcdb --enable-iam-login
+
+또는 gcloud auth를 먼저 실행:
+
+gcloud auth login
+gcloud config set project exam-system-28765
+gcloud sql connect exam-system-fdc --database=fdcdb
+
+================================================================================
+방법 3: postgres 사용자 패스워드 설정 후 연결
+================================================================================
+
+1. Cloud SQL 인스턴스 페이지로 이동:
+   https://console.cloud.google.com/sql/instances/exam-system-fdc/users?project=exam-system-28765
+
+2. "postgres" 사용자 찾기
+
+3. 우측 점 3개 메뉴 (...) 클릭 → "비밀번호 변경"
+
+4. 새 비밀번호 설정 (예: TempPassword123!)
+
+5. Cloud Shell에서 연결:
+   gcloud sql connect exam-system-fdc --user=postgres --database=fdcdb
+
+6. 방금 설정한 비밀번호 입력
+
+================================================================================
+실행할 SQL 쿼리
+================================================================================
+
+연결에 성공하면 다음 쿼리들을 순서대로 실행하세요:
+
+-- 쿼리 1: 현재 사용자 확인
+SELECT current_user, current_database();
+
+-- 쿼리 2: Firebase 관련 역할 확인
+SELECT rolname, rolsuper, rolinherit, rolcreaterole, rolcreatedb, rolcanlogin
+FROM pg_roles
+WHERE rolname LIKE '%firebase%' OR rolname LIKE '%owner%'
+ORDER BY rolname;
+
+-- 쿼리 3: cloudsqlsuperuser 역할 확인
+SELECT rolname, rolsuper, rolcreaterole, rolcreatedb
+FROM pg_roles
+WHERE rolname = 'cloudsqlsuperuser';
+
+-- 쿼리 4: firebaseowner_fdcdb_public 역할 그룹 확인
+SELECT r.rolname AS role_name, m.rolname AS member_of
+FROM pg_roles r
+LEFT JOIN pg_auth_members am ON r.oid = am.member
+LEFT JOIN pg_roles m ON am.roleid = m.oid
+WHERE r.rolname = 'firebaseowner_fdcdb_public';
+
+-- 쿼리 5: user 테이블 컬럼 확인
+SELECT column_name, data_type, character_maximum_length, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'user'
+ORDER BY ordinal_position;
+
+================================================================================
+가장 빠른 방법 (추천)
+================================================================================
+
+위 방법들이 모두 복잡하다면, 제가 필요한 SQL 명령을 모두 작성해드릴 수 있습니다.
+
+Firebase 지원팀에 다음을 요청하세요:
+"아래 SQL을 exam-system-fdc 인스턴스의 fdcdb 데이터베이스에서 실행해주세요"
+
+그러면 제가 실행할 SQL 파일을 작성해드리겠습니다.
+
+================================================================================

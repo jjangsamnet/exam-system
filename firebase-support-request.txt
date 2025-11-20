@@ -1,0 +1,51 @@
+Subject: Database Migration Failure - Permission Error in Firebase Data Connect
+
+---
+
+Hello Firebase Support Team,
+
+I am experiencing an error when trying to migrate my Cloud SQL database schema for Firebase Data Connect.
+
+PROJECT DETAILS:
+- Project ID: exam-system-28765
+- Service ID: exam-system
+- Cloud SQL Instance: exam-system-fdc
+- Database: fdcdb
+- Region: us-east4
+
+PROBLEM:
+When I try to run the database migration command, I receive a permission error:
+
+Command executed:
+  firebase dataconnect:sql:migrate --force
+
+Error message:
+  "Error: An unexpected error has occurred."
+
+The error occurs during this step:
+  "Granting firebaseowner role to myself kd12345@gmail.com..."
+
+REQUIRED MIGRATION:
+The following SQL statements need to be executed to make the database schema compatible with my Data Connect schema:
+
+  ALTER TABLE "public"."user"
+  ADD COLUMN "approval_status" character varying(20) NULL,
+  ADD COLUMN "school_name" character varying(200) NULL;
+
+ATTEMPTS MADE:
+1. firebase dataconnect:sql:migrate - Failed with permission error
+2. firebase dataconnect:sql:migrate --force - Failed with same error
+3. firebase deploy --only dataconnect - Connection timeout
+4. Direct SQL execution via Cloud SQL Studio - Error: "must be owner of table user"
+
+QUESTION:
+How can I properly migrate my database schema? Do I need additional IAM permissions for my account, or is there another way to execute this migration?
+
+Additional Information:
+- Firebase CLI version: (latest)
+- The application is already deployed and running
+- This is blocking the implementation of user approval system and school name features
+
+Thank you for your assistance.
+
+Best regards

@@ -1,0 +1,86 @@
+Subject: Database Migration Failure - Connection Timeout
+
+Project ID: exam-system-28765
+Cloud SQL Instance: exam-system-fdc
+Database: fdcdb
+Region: us-east4
+
+---
+
+PROBLEM SUMMARY:
+
+Unable to migrate database schema due to connection timeouts. The system needs to add two columns to the "user" table, but all migration attempts fail.
+
+Required SQL:
+```sql
+ALTER TABLE "public"."user"
+ADD COLUMN "approval_status" character varying(20) NULL,
+ADD COLUMN "school_name" character varying(200) NULL;
+```
+
+---
+
+WHAT WE TRIED:
+
+1. IAM Permissions ✓
+   - Verified account has: Owner, Cloud SQL Admin, Firebase Admin roles
+   - All required permissions are in place
+
+2. Network Configuration ✓
+   - Added IP address (210.107.8.68/32) to Cloud SQL authorized networks
+
+3. Migration Commands ✗
+   - firebase dataconnect:sql:setup → Connection timeout
+   - firebase dataconnect:sql:migrate --force → Connection timeout
+   - firebase deploy --only dataconnect → Schema incompatibility error
+
+---
+
+ERROR DETAILS:
+
+Command: firebase dataconnect:sql:setup --debug
+
+Key error from debug log:
+```
+Role "cloudsqlsuperuser", is not granted to role "firebaseowner_fdcdb_public"
+Error: Connection terminated due to connection timeout (after ~10 seconds)
+```
+
+The CLI successfully:
+- Authenticates with Cloud SQL
+- Generates ephemeral certificates
+- Detects missing role permissions
+
+Then fails when executing SQL commands to grant permissions.
+
+---
+
+CURRENT WORKAROUND:
+
+Modified application code to skip sending schoolName/approvalStatus parameters to database. System is deployed and functional at https://exam-system-28765.web.app, but these features are unavailable:
+- Student school name storage
+- Teacher/admin approval system
+
+---
+
+REQUEST:
+
+Could the Firebase team help with one of these options?
+
+1. Execute the ALTER TABLE statement directly on our Cloud SQL instance
+2. Grant "cloudsqlsuperuser" role to "firebaseowner_fdcdb_public"
+3. Investigate why connection timeouts occur from our location (South Korea → us-east4)
+
+---
+
+ENVIRONMENT:
+
+- Location: South Korea
+- Network: Corporate firewall
+- OS: Windows
+- Firebase CLI: Latest
+- Cloud SQL Settings: IAM auth enabled, Public IP (35.245.133.94)
+
+URGENCY: Medium - System works with workaround, but need full features.
+
+Thank you for your assistance.

@@ -1,0 +1,104 @@
+================================================================================
+역할 멤버십 확인 및 수정
+================================================================================
+
+오류 메시지:
+ERROR: role "cloudsqlsuperuser" is a member of role "firebaseowner_fdcdb_public"
+
+의미:
+현재 cloudsqlsuperuser가 firebaseowner_fdcdb_public의 멤버로 설정되어 있음
+(역방향 관계)
+
+================================================================================
+1단계: 현재 역할 관계 확인
+================================================================================
+
+다음 쿼리를 실행하여 양방향 관계를 모두 확인하세요:
+
+-- firebaseowner_fdcdb_public이 속한 그룹 확인
+SELECT r.rolname AS role_name, m.rolname AS member_of
+FROM pg_roles r
+LEFT JOIN pg_auth_members am ON r.oid = am.member
+LEFT JOIN pg_roles m ON am.roleid = m.oid
+WHERE r.rolname = 'firebaseowner_fdcdb_public';
+
+-- cloudsqlsuperuser가 속한 그룹 확인
+SELECT r.rolname AS role_name, m.rolname AS member_of
+FROM pg_roles r
+LEFT JOIN pg_auth_members am ON r.oid = am.member
+LEFT JOIN pg_roles m ON am.roleid = m.oid
+WHERE r.rolname = 'cloudsqlsuperuser';
+
+-- 모든 역할 멤버십 확인
+SELECT
+    m.rolname AS member,
+    r.rolname AS belongs_to
+FROM pg_auth_members am
+JOIN pg_roles m ON am.member = m.oid
+JOIN pg_roles r ON am.roleid = r.oid
+WHERE m.rolname IN ('cloudsqlsuperuser', 'firebaseowner_fdcdb_public')
+   OR r.rolname IN ('cloudsqlsuperuser', 'firebaseowner_fdcdb_public')
+ORDER BY member, belongs_to;
+
+================================================================================
+2단계: 역방향 관계 제거 (필요한 경우)
+================================================================================
+
+만약 cloudsqlsuperuser가 firebaseowner_fdcdb_public의 멤버로 되어 있다면:
+
+REVOKE firebaseowner_fdcdb_public FROM cloudsqlsuperuser;
+
+================================================================================
+3단계: 올바른 방향으로 권한 부여
+================================================================================
+
+그 다음 올바른 방향으로 권한 부여:
+
+GRANT cloudsqlsuperuser TO firebaseowner_fdcdb_public;
+
+================================================================================
+4단계: 또는 - 이미 올바른 권한이 있는지 확인
+================================================================================
+
+실제로 firebaseowner_fdcdb_public이 이미 필요한 권한을 가지고 있을 수도 있습니다.
+다음 쿼리로 확인:
+
+SELECT
+    r.rolname,
+    r.rolsuper,
+    r.rolcreaterole,
+    r.rolcreatedb,
+    array_agg(m.rolname) as member_of
+FROM pg_roles r
+LEFT JOIN pg_auth_members am ON r.oid = am.member
+LEFT JOIN pg_roles m ON am.roleid = m.oid
+WHERE r.rolname = 'firebaseowner_fdcdb_public'
+GROUP BY r.rolname, r.rolsuper, r.rolcreaterole, r.rolcreatedb;
+
+================================================================================
+대안: 직접 필요한 권한만 부여
+================================================================================
+
+cloudsqlsuperuser 그룹에 추가하는 대신, 필요한 권한을 직접 부여:
+
+-- firebaseowner_fdcdb_public에 CREATE ROLE 권한 부여
+ALTER ROLE firebaseowner_fdcdb_public CREATEROLE;
+
+-- firebaseowner_fdcdb_public에 CREATE DATABASE 권한 부여
+ALTER ROLE firebaseowner_fdcdb_public CREATEDB;
+
+-- 권한 확인
+SELECT rolname, rolsuper, rolcreaterole, rolcreatedb
+FROM pg_roles
+WHERE rolname = 'firebaseowner_fdcdb_public';
+
+================================================================================
+실행 순서 (권장)
+================================================================================
+
+1. 먼저 1단계의 모든 쿼리를 실행하여 현재 상태 확인
+2. 결과를 확인한 후 적절한 방법 선택:
+   - 옵션 A: 역방향 관계 제거 후 올바른 방향으로 재설정 (2-3단계)
+   - 옵션 B: 직접 필요한 권한만 부여 (대안 방법)
+
+================================================================================
