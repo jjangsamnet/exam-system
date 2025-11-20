@@ -1,0 +1,221 @@
+================================================================================
+로그인 시 역할 덮어쓰기 문제 해결 완료
+================================================================================
+
+프로젝트: exam-system-28765
+웹사이트: https://exam-system-28765.web.app
+배포 일시: 2025-11-21
+커밋 ID: e875fa9
+
+================================================================================
+문제 상황
+================================================================================
+
+증상:
+- kd12345@gmail.com 계정이 데이터베이스에서 admin으로 설정되어 있음
+- 하지만 구글 로그인 후에는 student로 표시됨
+- 매번 로그인할 때마다 역할이 기본값으로 재설정됨
+
+원인:
+- AuthContext.jsx의 onAuthStateChanged 이벤트에서 syncUserProfile 호출
+- syncUserProfile 함수가 additionalData 없이 호출되면 role이 기본값 'student'로 설정
+- 이것이 데이터베이스의 admin 설정을 덮어씀
+
+코드 위치:
+- web-app/src/contexts/AuthContext.jsx (line 95-111)
+
+================================================================================
+해결 방법
+================================================================================
+
+변경 사항:
+- onAuthStateChanged에서 syncUserProfile 호출 제거
+- 로그인 시에는 userProfile을 로컬에서만 설정 (데이터베이스 업데이트 안 함)
+- 회원가입 시에만 syncUserProfile 호출하여 초기 프로필 생성
+- 기존 사용자의 role은 데이터베이스에 저장된 값 유지
+
+수정된 코드:
+```javascript
+// 이전 (문제 있음)
+if (user) {
+  await syncUserProfile(user)  // 매번 DB 업데이트
+}
+
+// 수정 후 (정상 동작)
+if (user) {
+  setUserProfile({
+    email: user.email,
+    name: user.displayName || user.email.split('@')[0]
+  })  // 로컬에서만 설정, DB는 그대로 유지
+}
+```
+
+배포 완료:
+- 빌드: npm run build ✓
+- Firebase 배포: firebase deploy --only hosting ✓
+- GitHub 푸시: git push ✓
+
+================================================================================
+관리자 계정 설정 방법
+================================================================================
+
+이제 역할 덮어쓰기 문제가 해결되었으므로, 관리자 계정을 설정할 수 있습니다.
+
+1단계: Cloud SQL 웹 콘솔 접속
+----------------------------------
+
+URL:
+https://console.cloud.google.com/sql/instances/exam-system-fdc/overview?project=exam-system-28765
+
+2단계: SQL 작업 공간 열기
+--------------------------
+
+1. 좌측 메뉴에서 "데이터베이스" 클릭
+2. "fdcdb" 데이터베이스 선택
+3. 상단의 "SQL 작업 공간" 또는 "쿼리" 버튼 클릭
+
+3단계: admin 역할 설정
+----------------------
+
+다음 SQL 실행:
+
+-- kd12345@gmail.com을 관리자로 변경
+UPDATE "public"."user"
+SET role = 'admin', approval_status = 'approved'
+WHERE email = 'kd12345@gmail.com';
+
+-- 변경 확인
+SELECT email, name, role, approval_status
+FROM "public"."user"
+WHERE email = 'kd12345@gmail.com';
+
+예상 결과:
+       email        |  name  | role  | approval_status
+--------------------+--------+-------+-----------------
+ kd12345@gmail.com  | [이름] | admin | approved
+
+4단계: 웹사이트에서 재로그인
+----------------------------
+
+1. https://exam-system-28765.web.app 접속
+2. 현재 로그인되어 있다면 로그아웃
+3. 구글 계정(kd12345@gmail.com)으로 다시 로그인
+
+5단계: 관리자 권한 확인
+-----------------------
+
+로그인 후 확인사항:
+- 사용자 프로필에 "관리자" 표시
+- 관리자 전용 메뉴 접근 가능
+- 역할이 student로 변경되지 않음
+
+================================================================================
+대안: Cloud Shell 사용
+================================================================================
+
+웹 콘솔 대신 Cloud Shell을 사용할 수도 있습니다:
+
+1. Cloud Shell 열기 (화면 우측 상단 >_ 아이콘)
+
+2. PostgreSQL 연결:
+
+gcloud sql connect exam-system-fdc --user=postgres --database=fdcdb
+
+3. 비밀번호 입력
+
+4. SQL 실행:
+
+UPDATE "public"."user"
+SET role = 'admin', approval_status = 'approved'
+WHERE email = 'kd12345@gmail.com';
+
+SELECT email, name, role, approval_status
+FROM "public"."user"
+WHERE email = 'kd12345@gmail.com';
+
+5. 연결 종료:
+
+\q
+
+================================================================================
+추가 관리자 계정 추가
+================================================================================
+
+다른 사용자를 관리자로 설정하려면:
+
+UPDATE "public"."user"
+SET role = 'admin', approval_status = 'approved'
+WHERE email = '추가할이메일@example.com';
+
+또는 여러 계정을 한번에:
+
+UPDATE "public"."user"
+SET role = 'admin', approval_status = 'approved'
+WHERE email IN (
+  'admin1@example.com',
+  'admin2@example.com',
+  'admin3@example.com'
+);
+
+================================================================================
+역할 종류 및 권한
+================================================================================
+
+시스템에서 사용 가능한 역할:
+
+1. student (학생)
+   - 시험 응시
+   - 성적 확인
+   - approval_status: 자동 'approved'
+
+2. teacher (교사)
+   - 문제 출제
+   - 시험 생성
+   - 학생 성적 관리
+   - approval_status: 'pending' (관리자 승인 필요)
+
+3. admin (관리자)
+   - 모든 권한
+   - 사용자 관리
+   - 교사/관리자 승인
+   - 시스템 설정
+   - approval_status: 'approved'
+
+================================================================================
+문제 발생 시
+================================================================================
+
+역할이 여전히 student로 표시되는 경우:
+
+1. 브라우저 캐시 삭제:
+   - Ctrl+Shift+Delete
+   - 캐시 및 쿠키 삭제
+   - 브라우저 재시작
+
+2. 데이터베이스 확인:
+   SELECT email, role, approval_status
+   FROM "public"."user"
+   WHERE email = 'kd12345@gmail.com';
+
+3. Firebase 배포 상태 확인:
+   firebase deploy --only hosting
+
+4. 로그아웃 후 재로그인
+
+5. 다른 브라우저에서 테스트 (시크릿 모드)
+
+================================================================================
+완료 확인
+================================================================================
+
+✓ 역할 덮어쓰기 문제 해결 완료
+✓ AuthContext.jsx 수정 완료
+✓ Firebase 배포 완료
+✓ GitHub 동기화 완료
+
+다음 단계:
+1. Cloud SQL에서 kd12345@gmail.com을 admin으로 설정
+2. 웹사이트에서 재로그인
+3. 관리자 권한 확인
+
+================================================================================
