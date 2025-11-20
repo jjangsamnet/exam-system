@@ -98,8 +98,12 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(user)
 
       if (user) {
-        // 로그인된 경우 프로필 동기화 (기존 사용자)
-        await syncUserProfile(user)
+        // 로그인된 경우 - 기존 사용자의 role을 덮어쓰지 않도록 프로필 동기화 하지 않음
+        // 회원가입 시에만 syncUserProfile이 호출되어 초기 프로필 생성
+        setUserProfile({
+          email: user.email,
+          name: user.displayName || user.email.split('@')[0]
+        })
       } else {
         setUserProfile(null)
       }
