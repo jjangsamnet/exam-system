@@ -1,8 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { storage } from '../../firebase-config'
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import './Steps.css'
 
 const QuestionContentStep = ({ formData, updateFormData }) => {
   const [dragActive, setDragActive] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const textareaRef = useRef(null)
 
   const handleDrag = (e) => {
     e.preventDefault()
@@ -30,22 +35,91 @@ const QuestionContentStep = ({ formData, updateFormData }) => {
     }
   }
 
-  const handleFile = (file) => {
-    if (file.type.startsWith('image/')) {
-      // TODO: Firebase Storage에 업로드하고 URL 받기
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        updateFormData('imageUrl', e.target.result)
-      }
-      reader.readAsDataURL(file)
-    } else {
+  const handleFile = async (file) => {
+    if (!file.type.startsWith('image/')) {
       alert('이미지 파일만 업로드 가능합니다.')
+      return
+    }
+
+    // 파일 크기 체크 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('이미지 크기는 5MB 이하만 가능합니다.')
+      return
+    }
+
+    try {
+      setUploading(true)
+      setUploadProgress(0)
+
+      // Firebase Storage에 업로드
+      const fileName = `question-images/${Date.now()}_${file.name}`
+      const storageRef = ref(storage, fileName)
+      const uploadTask = uploadBytesResumable(storageRef, file)
+
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // 업로드 진행률 계산
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          setUploadProgress(Math.round(progress))
+        },
+        (error) => {
+          console.error('이미지 업로드 실패:', error)
+          alert('이미지 업로드에 실패했습니다.')
+          setUploading(false)
+        },
+        async () => {
+          // 업로드 완료 - URL 가져오기
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
+          updateFormData('imageUrl', downloadURL)
+          setUploading(false)
+          setUploadProgress(0)
+        }
+      )
+    } catch (error) {
+      console.error('이미지 처리 실패:', error)
+      alert('이미지 처리에 실패했습니다.')
+      setUploading(false)
     }
   }
 
   const removeImage = () => {
     updateFormData('imageUrl', '')
   }
+
+  // 클립보드에서 이미지 붙여넣기
+  const handlePaste = (e) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile()
+        if (file) {
+          e.preventDefault()
+          handleFile(file)
+        }
+      }
+    }
+  }
+
+  // 페이지 전체에서 붙여넣기 감지
+  useEffect(() => {
+    const handleWindowPaste = (e) => {
+      // 다른 입력 필드에 포커스되어 있으면 무시
+      const activeElement = document.activeElement
+      if (activeElement && activeElement.tagName === 'TEXTAREA' && activeElement === textareaRef.current) {
+        return
+      }
+
+      handlePaste(e)
+    }
+
+    window.addEventListener('paste', handleWindowPaste)
+    return () => {
+      window.removeEventListener('paste', handleWindowPaste)
+    }
+  }, [])
 
   return (
     <div className="step-content">
@@ -55,6 +129,7 @@ const QuestionContentStep = ({ formData, updateFormData }) => {
       <div className="form-group">
         <label className="form-label required">문제</label>
         <textarea
+          ref={textareaRef}
           className="form-textarea"
           rows="6"
           placeholder="문제를 입력하세요. 예) 다음 중 원의 넓이를 구하는 공식은?"
@@ -69,7 +144,14 @@ const QuestionContentStep = ({ formData, updateFormData }) => {
       <div className="form-group">
         <label className="form-label">이미지 첨부 (선택)</label>
 
-        {!formData.imageUrl ? (
+        {uploading ? (
+          <div className="upload-progress-container">
+            <div className="upload-progress-bar">
+              <div className="upload-progress-fill" style={{ width: `${uploadProgress}%` }}></div>
+            </div>
+            <p className="upload-progress-text">업로드 중... {uploadProgress}%</p>
+          </div>
+        ) : !formData.imageUrl ? (
           <div
             className={`file-upload ${dragActive ? 'drag-active' : ''}`}
             onDragEnter={handleDrag}
@@ -80,6 +162,7 @@ const QuestionContentStep = ({ formData, updateFormData }) => {
             <div className="upload-icon">📷</div>
             <div className="upload-text">
               <p><strong>이미지를 드래그하거나 클릭하여 업로드</strong></p>
+              <p className="upload-hint">또는 Ctrl+V (Mac: Cmd+V)로 붙여넣기</p>
               <p className="upload-hint">JPG, PNG, GIF (최대 5MB)</p>
             </div>
             <input
