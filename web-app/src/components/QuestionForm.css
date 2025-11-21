@@ -64,7 +64,10 @@
   color: #ef4444 !important;
   font-weight: 900 !important;
   font-size: 32px !important;
-  line-height: 1 !important;
+  line-height: 0 !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .close-btn:hover {
