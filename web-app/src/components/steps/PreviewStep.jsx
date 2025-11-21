@@ -81,10 +81,17 @@ const PreviewStep = ({ formData }) => {
                   key={index}
                   className={`preview-choice ${choice.isCorrect ? 'correct' : ''}`}
                 >
-                  <span className="preview-choice-number">{index + 1}.</span>
-                  <span className="preview-choice-text">{choice.choiceText}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                    <span className="preview-choice-number">{index + 1}.</span>
+                    <span className="preview-choice-text">{choice.choiceText}</span>
+                  </div>
                   {choice.isCorrect && (
                     <span className="preview-choice-badge">✓ 정답</span>
+                  )}
+                  {choice.imageUrl && (
+                    <div className="preview-image" style={{ marginTop: '8px', marginLeft: '36px' }}>
+                      <img src={choice.imageUrl} alt={`선택지 ${index + 1} 이미지`} style={{ maxHeight: '150px' }} />
+                    </div>
                   )}
                 </div>
               ))}
