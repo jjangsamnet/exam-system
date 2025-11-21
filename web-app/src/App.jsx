@@ -6,6 +6,7 @@ import QuestionForm from './components/QuestionForm'
 import QuestionList from './components/QuestionList'
 import ExamBuilder from './components/ExamBuilder'
 import CategoryManager from './components/CategoryManager'
+import UserManagement from './components/UserManagement'
 import Login from './components/auth/Login'
 import Signup from './components/auth/Signup'
 import './App.css'
@@ -28,6 +29,7 @@ function AppContent() {
   const [showQuestionList, setShowQuestionList] = useState(false)
   const [showExamBuilder, setShowExamBuilder] = useState(false)
   const [showCategoryManager, setShowCategoryManager] = useState(false)
+  const [showUserManagement, setShowUserManagement] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
   const [showSignup, setShowSignup] = useState(false)
   const [systemInfo, setSystemInfo] = useState({
@@ -261,6 +263,14 @@ function AppContent() {
             >
               📋 시험 만들기 UI
             </button>
+            {userProfile?.role === 'admin' && (
+              <button
+                style={{...styles.demoButton, background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)'}}
+                onClick={() => setShowUserManagement(true)}
+              >
+                👥 사용자 관리
+              </button>
+            )}
           </div>
         </footer>
       </main>
@@ -294,6 +304,19 @@ function AppContent() {
           <button
             style={styles.closeModalBtn}
             onClick={() => setShowCategoryManager(false)}
+          >
+            ✕ 닫기
+          </button>
+        </div>
+      )}
+
+      {/* User Management Modal */}
+      {showUserManagement && (
+        <div style={styles.modal}>
+          <UserManagement />
+          <button
+            style={styles.closeModalBtn}
+            onClick={() => setShowUserManagement(false)}
           >
             ✕ 닫기
           </button>

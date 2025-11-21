@@ -3,13 +3,14 @@ import { useAuth } from '../../contexts/AuthContext'
 import './Auth.css'
 
 const Login = ({ onClose, onSwitchToSignup }) => {
-  const { login, loginWithGoogle } = useAuth()
+  const { login, loginWithGoogle, resetPassword } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resetEmailSent, setResetEmailSent] = useState(false)
 
   const handleChange = (e) => {
     setFormData({
@@ -77,6 +78,40 @@ const Login = ({ onClose, onSwitchToSignup }) => {
     }
   }
 
+  const handlePasswordReset = async () => {
+    if (!formData.email) {
+      setError('비밀번호를 재설정할 이메일 주소를 입력해주세요.')
+      return
+    }
+
+    setError('')
+    setLoading(true)
+
+    try {
+      await resetPassword(formData.email)
+      setResetEmailSent(true)
+      setTimeout(() => setResetEmailSent(false), 5000) // 5초 후 메시지 자동 숨김
+    } catch (error) {
+      console.error('비밀번호 재설정 실패:', error)
+
+      switch (error.code) {
+        case 'auth/user-not-found':
+          setError('등록되지 않은 이메일입니다.')
+          break
+        case 'auth/invalid-email':
+          setError('이메일 형식이 올바르지 않습니다.')
+          break
+        case 'auth/too-many-requests':
+          setError('너무 많은 요청이 있었습니다. 잠시 후 다시 시도해주세요.')
+          break
+        default:
+          setError('비밀번호 재설정 이메일 전송에 실패했습니다.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="auth-modal-overlay">
       <div className="auth-modal">
@@ -92,6 +127,13 @@ const Login = ({ onClose, onSwitchToSignup }) => {
             <div className="auth-error">
               <span className="error-icon">⚠️</span>
               {error}
+            </div>
+          )}
+
+          {resetEmailSent && (
+            <div className="auth-success">
+              <span className="success-icon">✅</span>
+              비밀번호 재설정 이메일이 전송되었습니다. 이메일을 확인해주세요.
             </div>
           )}
 
@@ -159,6 +201,16 @@ const Login = ({ onClose, onSwitchToSignup }) => {
                 disabled={loading}
               >
                 회원가입
+              </button>
+            </p>
+            <p>
+              <button
+                className="link-btn"
+                onClick={handlePasswordReset}
+                disabled={loading}
+                type="button"
+              >
+                비밀번호를 잊으셨나요?
               </button>
             </p>
           </div>

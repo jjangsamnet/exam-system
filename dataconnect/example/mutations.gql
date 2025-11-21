@@ -16,6 +16,26 @@ mutation UpsertUser($email: String!, $name: String!, $role: String!, $schoolName
   )
 }
 
+# 사용자 승인 상태 업데이트 (관리자 전용)
+mutation UpdateUserApprovalStatus($userId: String!, $approvalStatus: String!) @auth(level: USER) {
+  user_update(
+    id: $userId
+    data: {
+      approvalStatus: $approvalStatus
+    }
+  )
+}
+
+# 사용자 역할 업데이트 (관리자 전용)
+mutation UpdateUserRole($userId: String!, $role: String!) @auth(level: USER) {
+  user_update(
+    id: $userId
+    data: {
+      role: $role
+    }
+  )
+}
+
 # === 카테고리 관리 뮤테이션 ===
 
 # 카테고리 생성 (교사 이상)

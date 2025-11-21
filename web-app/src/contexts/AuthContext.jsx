@@ -5,7 +5,8 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  sendPasswordResetEmail
 } from 'firebase/auth'
 import { auth } from '../firebase-config'
 import { upsertUser, getCurrentUser } from '../dataconnect-generated'
@@ -105,6 +106,16 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // 비밀번호 재설정 이메일 전송
+  const resetPassword = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email)
+    } catch (error) {
+      console.error('비밀번호 재설정 이메일 전송 오류:', error)
+      throw error
+    }
+  }
+
   // 인증 상태 변경 감지
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -154,6 +165,7 @@ export const AuthProvider = ({ children }) => {
     login,
     loginWithGoogle,
     logout,
+    resetPassword,
     loading
   }
 
