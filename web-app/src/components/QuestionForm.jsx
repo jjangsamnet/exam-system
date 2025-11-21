@@ -148,9 +148,7 @@ const QuestionForm = ({ onClose }) => {
       <div className="question-form">
         <div className="form-header">
           <h2>📝 새 문항 등록</h2>
-          {onClose && (
-            <button className="close-btn" onClick={onClose}>✕</button>
-          )}
+          <button className="close-btn" onClick={onClose} title="닫기">✕</button>
         </div>
 
         <StepIndicator currentStep={currentStep} totalSteps={totalSteps} />

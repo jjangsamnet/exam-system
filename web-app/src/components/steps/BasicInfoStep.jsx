@@ -1,12 +1,18 @@
+import { useQuery } from '@tanstack/react-query'
+import { listCategories } from '../../dataconnect-generated'
 import './Steps.css'
 
 const BasicInfoStep = ({ formData, updateFormData }) => {
-  const categories = [
-    { id: 'cat-math', name: '수학' },
-    { id: 'cat-science', name: '과학' },
-    { id: 'cat-english', name: '영어' },
-    { id: 'cat-korean', name: '국어' }
-  ]
+  // 데이터베이스에서 카테고리 목록 가져오기
+  const { data: categoriesData, isLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const result = await listCategories()
+      return result.data
+    }
+  })
+
+  const categories = categoriesData?.categories || []
 
   return (
     <div className="step-content">
@@ -76,8 +82,11 @@ const BasicInfoStep = ({ formData, updateFormData }) => {
             className="form-select"
             value={formData.categoryId}
             onChange={(e) => updateFormData('categoryId', e.target.value)}
+            disabled={isLoading}
           >
-            <option value="">과목을 선택하세요</option>
+            <option value="">
+              {isLoading ? '카테고리 로딩 중...' : '과목을 선택하세요'}
+            </option>
             {categories.map(cat => (
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
