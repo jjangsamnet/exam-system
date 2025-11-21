@@ -73,7 +73,20 @@ export const AuthProvider = ({ children }) => {
     try {
       const provider = new GoogleAuthProvider()
       const result = await signInWithPopup(auth, provider)
-      await syncUserProfile(result.user, { role, schoolName })
+
+      // 기존 사용자인지 확인
+      try {
+        const userProfile = await getCurrentUser()
+        if (!userProfile.data.user) {
+          // 신규 사용자인 경우에만 프로필 생성
+          await syncUserProfile(result.user, { role, schoolName })
+        }
+        // 기존 사용자는 데이터베이스의 정보를 유지 (덮어쓰지 않음)
+      } catch (error) {
+        // 오류 발생 시 신규 사용자로 간주하고 프로필 생성
+        await syncUserProfile(result.user, { role, schoolName })
+      }
+
       return result
     } catch (error) {
       console.error('Google 로그인 오류:', error)

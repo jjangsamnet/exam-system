@@ -1,0 +1,195 @@
+================================================================================
+kd12345@gmail.com 계정 상태 확인 및 관리자 설정
+================================================================================
+
+문제: 웹페이지에서 로그인하면 여전히 student로 표시됨
+
+가능한 원인:
+1. 데이터베이스에 해당 사용자가 아직 생성되지 않았음
+2. 데이터베이스에서 UPDATE가 실행되지 않았음
+3. 다른 이메일로 가입되어 있음
+
+================================================================================
+1단계: Cloud SQL에서 현재 사용자 상태 확인
+================================================================================
+
+Cloud SQL 웹 콘솔 접속:
+https://console.cloud.google.com/sql/instances/exam-system-fdc/overview?project=exam-system-28765
+
+좌측 메뉴 "데이터베이스" → "fdcdb" → "SQL 작업 공간"
+
+다음 SQL 실행:
+
+-- 모든 사용자 조회
+SELECT id, email, name, role, approval_status, created_at
+FROM "public"."user"
+ORDER BY created_at DESC;
+
+-- kd12345@gmail.com 사용자 확인
+SELECT id, email, name, role, approval_status, school_name, created_at
+FROM "public"."user"
+WHERE email = 'kd12345@gmail.com';
+
+-- 또는 이메일 일부로 검색
+SELECT id, email, name, role, approval_status
+FROM "public"."user"
+WHERE email LIKE '%kd12345%';
+
+================================================================================
+경우 1: 사용자가 존재하지 않는 경우
+================================================================================
+
+결과가 "0 rows"라면 데이터베이스에 사용자가 없는 것입니다.
+
+해결 방법:
+1. 웹사이트(https://exam-system-28765.web.app)에 접속
+2. 구글 계정(kd12345@gmail.com)으로 로그인
+3. 회원가입 진행 (역할: 교사 또는 학생 선택)
+4. 회원가입 완료 후 다시 Cloud SQL에서 확인
+
+그 다음 아래 2단계의 UPDATE 실행
+
+================================================================================
+경우 2: 사용자가 존재하지만 role이 student인 경우
+================================================================================
+
+결과 예시:
+ email            | name | role    | approval_status
+------------------+------+---------+-----------------
+ kd12345@gmail.com| 홍길동| student | approved
+
+다음 SQL 실행:
+
+UPDATE "public"."user"
+SET role = 'admin', approval_status = 'approved'
+WHERE email = 'kd12345@gmail.com';
+
+-- 확인
+SELECT email, name, role, approval_status
+FROM "public"."user"
+WHERE email = 'kd12345@gmail.com';
+
+예상 결과:
+ email            | name | role  | approval_status
+------------------+------+-------+-----------------
+ kd12345@gmail.com| 홍길동| admin | approved
+
+================================================================================
+경우 3: 다른 이메일로 가입되어 있는 경우
+================================================================================
+
+Gmail 계정이 다른 형식으로 저장되어 있을 수 있습니다:
+- kd12345@gmail.com (원래)
+- kd.12345@gmail.com (점이 들어간 경우)
+- 또는 다른 이메일
+
+모든 사용자 조회:
+SELECT email, name, role
+FROM "public"."user"
+ORDER BY created_at DESC;
+
+자신의 이메일을 찾아서 UPDATE:
+UPDATE "public"."user"
+SET role = 'admin', approval_status = 'approved'
+WHERE email = '실제이메일@gmail.com';
+
+================================================================================
+2단계: 웹사이트에서 재로그인
+================================================================================
+
+UPDATE 실행 후:
+
+1. https://exam-system-28765.web.app 접속
+2. 로그아웃 (우측 상단 프로필 메뉴)
+3. 브라우저 캐시 삭제 (Ctrl+Shift+Delete)
+4. 브라우저 완전히 종료 후 재시작
+5. 다시 웹사이트 접속
+6. 구글 계정으로 로그인
+
+================================================================================
+3단계: 개발자 도구로 확인
+================================================================================
+
+로그인 후 역할이 여전히 student로 표시되면:
+
+1. F12 키를 눌러 개발자 도구 열기
+2. Console 탭 선택
+3. 다음 입력:
+
+console.log('User Profile:', JSON.stringify(window.userProfile))
+
+또는
+
+localStorage 확인
+
+4. 오류 메시지가 있는지 확인
+
+================================================================================
+빠른 확인 방법
+================================================================================
+
+Cloud Shell 사용:
+
+1. Cloud Shell 열기 (화면 우측 상단 >_ 아이콘)
+
+2. PostgreSQL 연결:
+gcloud sql connect exam-system-fdc --user=postgres --database=fdcdb
+
+3. 비밀번호 입력
+
+4. 사용자 확인:
+SELECT email, role FROM "public"."user";
+
+5. 관리자로 변경:
+UPDATE "public"."user" SET role = 'admin', approval_status = 'approved' WHERE email = 'kd12345@gmail.com';
+
+6. 종료:
+\q
+
+================================================================================
+직접 사용자 생성 (최후의 수단)
+================================================================================
+
+만약 계속 문제가 발생하면, Firebase Auth UID를 사용하여 직접 생성:
+
+1. Firebase Console 접속:
+https://console.firebase.google.com/project/exam-system-28765/authentication/users
+
+2. kd12345@gmail.com의 UID 복사 (예: "abc123def456...")
+
+3. Cloud SQL에서 직접 INSERT:
+
+INSERT INTO "public"."user" (id, email, name, role, approval_status, created_at)
+VALUES (
+  '여기에_UID_붙여넣기',
+  'kd12345@gmail.com',
+  '홍길동',
+  'admin',
+  'approved',
+  NOW()
+)
+ON CONFLICT (id) DO UPDATE
+SET role = 'admin', approval_status = 'approved';
+
+================================================================================
+확인 쿼리 모음
+================================================================================
+
+-- 전체 사용자 수
+SELECT COUNT(*) FROM "public"."user";
+
+-- 역할별 사용자 수
+SELECT role, COUNT(*) FROM "public"."user" GROUP BY role;
+
+-- 최근 가입한 사용자 5명
+SELECT email, name, role, created_at
+FROM "public"."user"
+ORDER BY created_at DESC
+LIMIT 5;
+
+-- admin 역할을 가진 사용자
+SELECT email, name, role, approval_status
+FROM "public"."user"
+WHERE role = 'admin';
+
+================================================================================
