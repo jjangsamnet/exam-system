@@ -55,7 +55,9 @@ const CategoryManager = () => {
       { name: '물리', description: '물리학 관련 문제 카테고리' },
       { name: '화학', description: '화학 관련 문제 카테고리' },
       { name: '생물', description: '생물학 관련 문제 카테고리' },
-      { name: '지구과학', description: '지구과학 관련 문제 카테고리' }
+      { name: '지구과학', description: '지구과학 관련 문제 카테고리' },
+      { name: '컴퓨팅사고력검사', description: '컴퓨팅 사고력 평가 문제 카테고리' },
+      { name: '게임리터러시', description: '게임 리터러시 관련 문제 카테고리' }
     ]
 
     setError('')
@@ -143,7 +145,7 @@ const CategoryManager = () => {
               onClick={seedCategories}
               disabled={createMutation.isPending}
             >
-              {createMutation.isPending ? '생성 중...' : '📦 초기 카테고리 생성 (10개)'}
+              {createMutation.isPending ? '생성 중...' : '📦 초기 카테고리 생성 (12개)'}
             </button>
           </div>
         )}

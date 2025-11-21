@@ -24,6 +24,16 @@ mutation SeedExamSystem @transaction {
         id: "cat-korean-uuid",
         name: "국어",
         description: "국어 과목 문제"
+      },
+      {
+        id: "cat-ct-uuid",
+        name: "컴퓨팅사고력검사",
+        description: "컴퓨팅 사고력 평가 문제"
+      },
+      {
+        id: "cat-gameliteracy-uuid",
+        name: "게임리터러시",
+        description: "게임 리터러시 관련 문제"
       }
     ]
   )

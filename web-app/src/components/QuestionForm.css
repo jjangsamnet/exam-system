@@ -39,17 +39,28 @@
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #9ca3af;
+  background: #f3f4f6;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 28px;
+  color: #6b7280;
   cursor: pointer;
-  padding: 4px 8px;
-  transition: color 0.2s;
+  padding: 8px 12px;
+  transition: all 0.2s;
+  line-height: 1;
+  font-weight: 700;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
   color: #ef4444;
+  transform: scale(1.05);
 }
 
 .form-content {
