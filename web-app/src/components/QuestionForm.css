@@ -44,28 +44,30 @@
   position: absolute;
   top: 20px;
   right: 20px;
-  background: #ef4444;
-  border: none;
+  background: white;
+  border: 3px solid #ef4444;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 24px;
-  color: white;
+  width: 44px;
+  height: 44px;
+  font-size: 28px;
+  color: #ef4444;
   cursor: pointer;
   transition: all 0.2s;
   line-height: 1;
-  font-weight: 700;
+  font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   z-index: 100;
 }
 
 .close-btn:hover {
-  background: #dc2626;
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+  background: #ef4444;
+  color: white;
+  border-color: #dc2626;
+  transform: scale(1.15) rotate(90deg);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
 }
 
 .form-content {
