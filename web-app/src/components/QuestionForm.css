@@ -36,6 +36,7 @@
   margin: 0;
   font-size: 24px;
   color: #1f2937;
+  flex: 1;
 }
 
 .close-btn {
@@ -54,6 +55,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  margin-left: 16px;
 }
 
 .close-btn:hover {
