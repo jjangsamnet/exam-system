@@ -148,7 +148,9 @@ const QuestionForm = ({ onClose }) => {
       <div className="question-form">
         <div className="form-header">
           <h2>📝 새 문항 등록</h2>
-          <button className="close-btn" onClick={onClose} title="닫기">✕</button>
+          <button className="close-btn" onClick={onClose} title="닫기">
+            <span style={{ color: '#ef4444', fontWeight: 900, fontSize: '32px' }}>×</span>
+          </button>
         </div>
 
         <StepIndicator currentStep={currentStep} totalSteps={totalSteps} />
