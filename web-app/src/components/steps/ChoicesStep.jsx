@@ -1,8 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { storage } from '../../firebase-config'
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import './Steps.css'
 
 const ChoicesStep = ({ formData, updateFormData }) => {
   const [dragActiveIndex, setDragActiveIndex] = useState(null)
+  const [uploadingIndex, setUploadingIndex] = useState(null)
+  const [uploadProgress, setUploadProgress] = useState({})
 
   const updateChoice = (index, field, value) => {
     const newChoices = [...formData.choices]
@@ -56,21 +60,129 @@ const ChoicesStep = ({ formData, updateFormData }) => {
     }
   }
 
-  const handleFile = (file, index) => {
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        updateChoice(index, 'imageUrl', e.target.result)
-      }
-      reader.readAsDataURL(file)
-    } else {
+  const handleFile = async (file, index) => {
+    if (!file.type.startsWith('image/')) {
       alert('이미지 파일만 업로드 가능합니다.')
+      return
+    }
+
+    // 파일 크기 체크 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('이미지 크기는 5MB 이하만 가능합니다.')
+      return
+    }
+
+    try {
+      setUploadingIndex(index)
+      setUploadProgress(prev => ({ ...prev, [index]: 0 }))
+
+      // Firebase Storage에 업로드
+      const fileName = `choice-images/${Date.now()}_${file.name}`
+      const storageRef = ref(storage, fileName)
+      const uploadTask = uploadBytesResumable(storageRef, file)
+
+      // Promise로 감싸서 확실하게 완료 처리
+      await new Promise((resolve, reject) => {
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            // 업로드 진행률 계산
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            setUploadProgress(prev => ({ ...prev, [index]: Math.round(progress) }))
+            console.log(`선택지 ${index + 1} 업로드 진행률:`, progress)
+          },
+          (error) => {
+            console.error('이미지 업로드 실패:', error)
+            alert('이미지 업로드에 실패했습니다: ' + error.message)
+            setUploadingIndex(null)
+            setUploadProgress(prev => {
+              const newProgress = { ...prev }
+              delete newProgress[index]
+              return newProgress
+            })
+            reject(error)
+          },
+          async () => {
+            try {
+              // 업로드 완료 - URL 가져오기
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
+              console.log(`선택지 ${index + 1} 이미지 업로드 완료:`, downloadURL)
+              updateChoice(index, 'imageUrl', downloadURL)
+              setUploadingIndex(null)
+              setUploadProgress(prev => {
+                const newProgress = { ...prev }
+                delete newProgress[index]
+                return newProgress
+              })
+              resolve(downloadURL)
+            } catch (error) {
+              console.error('URL 가져오기 실패:', error)
+              alert('이미지 URL 가져오기에 실패했습니다.')
+              setUploadingIndex(null)
+              setUploadProgress(prev => {
+                const newProgress = { ...prev }
+                delete newProgress[index]
+                return newProgress
+              })
+              reject(error)
+            }
+          }
+        )
+      })
+    } catch (error) {
+      console.error('이미지 처리 실패:', error)
+      alert('이미지 처리에 실패했습니다: ' + error.message)
+      setUploadingIndex(null)
+      setUploadProgress(prev => {
+        const newProgress = { ...prev }
+        delete newProgress[index]
+        return newProgress
+      })
     }
   }
 
   const removeImage = (index) => {
     updateChoice(index, 'imageUrl', '')
   }
+
+  // 클립보드에서 이미지 붙여넣기
+  const handlePaste = (e, index) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile()
+        if (file) {
+          e.preventDefault()
+          handleFile(file, index)
+        }
+      }
+    }
+  }
+
+  // 선택지에서 붙여넣기 감지
+  useEffect(() => {
+    const handleWindowPaste = (e) => {
+      // 현재 포커스된 요소 확인
+      const activeElement = document.activeElement
+
+      // textarea에 포커스되어 있고, 선택지 textarea인 경우
+      if (activeElement && activeElement.classList.contains('choice-textarea')) {
+        // 선택지 인덱스 찾기
+        const choiceElements = document.querySelectorAll('.choice-textarea')
+        const index = Array.from(choiceElements).indexOf(activeElement)
+        if (index >= 0) {
+          handlePaste(e, index)
+        }
+      }
+    }
+
+    window.addEventListener('paste', handleWindowPaste)
+    return () => {
+      window.removeEventListener('paste', handleWindowPaste)
+    }
+  }, [formData.choices])
 
   if (formData.type === 'multiple_choice') {
     return (
@@ -118,7 +230,14 @@ const ChoicesStep = ({ formData, updateFormData }) => {
               />
 
               <div className="choice-image-section">
-                {!choice.imageUrl ? (
+                {uploadingIndex === index ? (
+                  <div className="upload-progress-container">
+                    <div className="upload-progress-bar">
+                      <div className="upload-progress-fill" style={{ width: `${uploadProgress[index] || 0}%` }}></div>
+                    </div>
+                    <p className="upload-progress-text">업로드 중... {uploadProgress[index] || 0}%</p>
+                  </div>
+                ) : !choice.imageUrl ? (
                   <div
                     className={`choice-file-upload ${dragActiveIndex === index ? 'drag-active' : ''}`}
                     onDragEnter={(e) => handleDrag(e, index)}
@@ -127,7 +246,7 @@ const ChoicesStep = ({ formData, updateFormData }) => {
                     onDrop={(e) => handleDrop(e, index)}
                   >
                     <div className="choice-upload-icon">📷</div>
-                    <div className="choice-upload-text">이미지 추가</div>
+                    <div className="choice-upload-text">이미지 추가 (Ctrl+V로 붙여넣기)</div>
                     <input
                       type="file"
                       className="file-input"
@@ -165,6 +284,7 @@ const ChoicesStep = ({ formData, updateFormData }) => {
             <ul>
               <li>최소 2개, 최대 5개의 선택지 입력 가능</li>
               <li>텍스트 붙여넣기 및 이미지 첨부 가능</li>
+              <li>각 선택지에 Ctrl+V (Mac: Cmd+V)로 이미지 붙여넣기 가능</li>
               <li>정답은 반드시 1개를 선택해야 합니다</li>
               <li>오답도 그럴듯하게 작성하세요</li>
             </ul>

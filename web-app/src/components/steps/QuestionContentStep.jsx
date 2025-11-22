@@ -56,30 +56,47 @@ const QuestionContentStep = ({ formData, updateFormData }) => {
       const storageRef = ref(storage, fileName)
       const uploadTask = uploadBytesResumable(storageRef, file)
 
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          // 업로드 진행률 계산
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          setUploadProgress(Math.round(progress))
-        },
-        (error) => {
-          console.error('이미지 업로드 실패:', error)
-          alert('이미지 업로드에 실패했습니다.')
-          setUploading(false)
-        },
-        async () => {
-          // 업로드 완료 - URL 가져오기
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
-          updateFormData('imageUrl', downloadURL)
-          setUploading(false)
-          setUploadProgress(0)
-        }
-      )
+      // Promise로 감싸서 확실하게 완료 처리
+      await new Promise((resolve, reject) => {
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            // 업로드 진행률 계산
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            setUploadProgress(Math.round(progress))
+            console.log('업로드 진행률:', progress)
+          },
+          (error) => {
+            console.error('이미지 업로드 실패:', error)
+            alert('이미지 업로드에 실패했습니다: ' + error.message)
+            setUploading(false)
+            setUploadProgress(0)
+            reject(error)
+          },
+          async () => {
+            try {
+              // 업로드 완료 - URL 가져오기
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
+              console.log('이미지 업로드 완료:', downloadURL)
+              updateFormData('imageUrl', downloadURL)
+              setUploading(false)
+              setUploadProgress(0)
+              resolve(downloadURL)
+            } catch (error) {
+              console.error('URL 가져오기 실패:', error)
+              alert('이미지 URL 가져오기에 실패했습니다.')
+              setUploading(false)
+              setUploadProgress(0)
+              reject(error)
+            }
+          }
+        )
+      })
     } catch (error) {
       console.error('이미지 처리 실패:', error)
-      alert('이미지 처리에 실패했습니다.')
+      alert('이미지 처리에 실패했습니다: ' + error.message)
       setUploading(false)
+      setUploadProgress(0)
     }
   }
 
