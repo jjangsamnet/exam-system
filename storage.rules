@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// Firebase Storage 보안 규칙
+service firebase.storage {
+  match /b/{bucket}/o {
+    // 인증된 사용자만 읽기 가능
+    match /{allPaths=**} {
+      allow read: if request.auth != null;
+    }
+    
+    // 문제 이미지 업로드 - 교사와 관리자만 가능
+    match /question-images/{imageId} {
+      allow write: if request.auth != null 
+                   && request.resource.size < 5 * 1024 * 1024  // 5MB 제한
+                   && request.resource.contentType.matches('image/.*');
+      allow read: if request.auth != null;
+    }
+    
+    // 임시: 개발 중에는 모든 인증된 사용자가 업로드 가능
+    match /question-images/{allPaths=**} {
+      allow write: if request.auth != null 
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow read: if request.auth != null;
+    }
+  }
+}

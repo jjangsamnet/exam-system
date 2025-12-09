@@ -36,6 +36,8 @@ const QuestionContentStep = ({ formData, updateFormData }) => {
   }
 
   const handleFile = async (file) => {
+    console.log('파일 업로드 시작:', file.name, file.type, file.size)
+    
     if (!file.type.startsWith('image/')) {
       alert('이미지 파일만 업로드 가능합니다.')
       return
@@ -51,10 +53,25 @@ const QuestionContentStep = ({ formData, updateFormData }) => {
       setUploading(true)
       setUploadProgress(0)
 
+      // Storage 객체 확인
+      if (!storage) {
+        console.error('Firebase Storage가 초기화되지 않았습니다.')
+        alert('Firebase Storage 초기화 오류입니다. 페이지를 새로고침해주세요.')
+        setUploading(false)
+        return
+      }
+
+      console.log('Firebase Storage 초기화 확인 완료')
+
       // Firebase Storage에 업로드
       const fileName = `question-images/${Date.now()}_${file.name}`
+      console.log('업로드 경로:', fileName)
+      
       const storageRef = ref(storage, fileName)
+      console.log('Storage Reference 생성 완료')
+      
       const uploadTask = uploadBytesResumable(storageRef, file)
+      console.log('Upload Task 생성 완료')
 
       // Promise로 감싸서 확실하게 완료 처리
       await new Promise((resolve, reject) => {
@@ -64,11 +81,24 @@ const QuestionContentStep = ({ formData, updateFormData }) => {
             // 업로드 진행률 계산
             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
             setUploadProgress(Math.round(progress))
-            console.log('업로드 진행률:', progress)
+            console.log('업로드 진행률:', Math.round(progress) + '%', 
+                       `(${snapshot.bytesTransferred}/${snapshot.totalBytes} bytes)`)
           },
           (error) => {
             console.error('이미지 업로드 실패:', error)
-            alert('이미지 업로드에 실패했습니다: ' + error.message)
+            console.error('에러 코드:', error.code)
+            console.error('에러 메시지:', error.message)
+            
+            let errorMessage = '이미지 업로드에 실패했습니다.'
+            if (error.code === 'storage/unauthorized') {
+              errorMessage = '업로드 권한이 없습니다. 로그인 상태를 확인해주세요.'
+            } else if (error.code === 'storage/canceled') {
+              errorMessage = '업로드가 취소되었습니다.'
+            } else if (error.code === 'storage/unknown') {
+              errorMessage = '알 수 없는 오류가 발생했습니다. 네트워크 연결을 확인해주세요.'
+            }
+            
+            alert(errorMessage + '\n상세: ' + error.message)
             setUploading(false)
             setUploadProgress(0)
             reject(error)
@@ -76,11 +106,18 @@ const QuestionContentStep = ({ formData, updateFormData }) => {
           async () => {
             try {
               // 업로드 완료 - URL 가져오기
+              console.log('업로드 완료, URL 가져오는 중...')
               const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
               console.log('이미지 업로드 완료:', downloadURL)
               updateFormData('imageUrl', downloadURL)
               setUploading(false)
-              setUploadProgress(0)
+              setUploadProgress(100)
+              
+              // 잠시 후 진행률 표시 제거
+              setTimeout(() => {
+                setUploadProgress(0)
+              }, 1000)
+              
               resolve(downloadURL)
             } catch (error) {
               console.error('URL 가져오기 실패:', error)
